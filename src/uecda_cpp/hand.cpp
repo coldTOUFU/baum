@@ -1,17 +1,5 @@
 #include "hand.hpp"
 
-const int uecda::Hand::kPairFilterSize[4] = {4, 6, 4, 1};
-const uecda::Cards::bitcards uecda::Hand::pairFilters[4][6] = {
-    {1, 32768, 1073741824, 35184372088832}, /* 1枚用。 */
-    {32769, 1073741825, 35184372088833, 1073774592, 35184372121600,
-     35185445830656}, /* 2枚用。4つから2つ選ぶから6通り。 */
-    {1073774593, 35184372121601, 35185445830657,
-     35185445863424}, /* 3枚用。4つから3つ選ぶから4通り。 */
-    {35185445863425}  /* 4枚用。 */
-};
-const uecda::Cards::bitcards uecda::Hand::sequenceFilters[14] = {
-    1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383};
-
 bool uecda::Hand::isLegal(const Table &tbl, const Hand &table_hand) const {
   if (tbl.is_start_of_trick) { return true; }
   if (this->summary_.is_pass) { return true; }
@@ -53,7 +41,7 @@ bool uecda::Hand::isLegal(const Table &tbl, const Hand &table_hand) const {
 }
 
 void uecda::Hand::pushHands(const Cards &src, std::vector<Hand> &hand_vec) {
-  Cards::bitcards src_bit = src.getCard();
+  Cards::bitcards src_bit = src.toBitcards();
   /* 手探索でフィルターにかけるとき邪魔なので、ジョーカーのビットを落とす。  */
   src_bit &= 0xfffffffffffffff;
 
@@ -81,16 +69,16 @@ void uecda::Hand::pushHands(const Cards &src, std::vector<Hand> &hand_vec) {
   }
 }
 
-void uecda::Hand::putCards(uecda::common::CommunicationBody dst) const {
-  Cards::bitcards src = this->cards_.getCard();
-  Cards::bitcards src_joker = this->joker_.getCard();
+void uecda::Hand::putCards(uecda::common::CommunicationBody& dst) const {
+  Cards::bitcards src = this->cards_.toBitcards();
+  Cards::bitcards src_joker = this->joker_.toBitcards();
 
   for (int i = 3; i >= 0; i--) {
     for (int j = 14; j >= 0; j--) {
-      dst[i][j] = src % 2;
+      dst.at(i).at(j) = src % 2;
       /* ジョーカーがある場合 */
       if (src_joker % 2) {
-        dst[i][j] = 2;
+        dst.at(i).at(j) = 2;
       }
 
       src >>= 1;
@@ -104,7 +92,7 @@ uecda::Cards uecda::Hand::createCards(const uecda::common::CommunicationBody src
 
   for (int suit = 0; suit < 4; suit++) {
     for (int order = 0; order < 15; order++) {
-      if (src[suit][order] == 1) {
+      if (src.at(suit).at(order) == 1) {
         b++;
       }
       b <<= 1;
@@ -121,7 +109,7 @@ uecda::Cards uecda::Hand::createJoker(const uecda::common::CommunicationBody src
 
   for (int suit = 0; suit < 4; suit++) {
     for (int order = 0; order < 15; order++) {
-      if (src[suit][order] == 2) {
+      if (src.at(suit).at(order) == 2) {
         b++;
       }
       b <<= 1;
@@ -144,9 +132,9 @@ uecda::HandSummary uecda::Hand::summarize(Cards::bitcards src, Cards::bitcards j
   Cards::bitcards w_ord = std::max(src_card.weakestOrder(), joker_src_card.weakestOrder());
   /* s_ordについては、カードが空の場合見かけ上その強さが0(最強よりも強い)になるので、カードが空かどうかで場合分けする。 */
   Cards::bitcards s_ord;
-  if (src_card.getCard() <= 0) {
+  if (src_card.toBitcards() <= 0) {
     s_ord = joker_src_card.strongestOrder();
-  } else if (joker_src_card.getCard() <= 0) {
+  } else if (joker_src_card.toBitcards() <= 0) {
     s_ord = src_card.strongestOrder();
   } else {
     s_ord = std::min(src_card.strongestOrder(), joker_src_card.strongestOrder());
@@ -178,9 +166,9 @@ void uecda::Hand::pushPair(Cards::bitcards src, std::vector<Hand> &hand_vec, int
   if (pair_qty < 1 || pair_qty > 4) { return; } // フィルターを定義していないseq_qtyが来たら何もしない。
 
   /* 各フィルター(=スートの組み合わせ)に対し、各数字についてペアを探す。 */
-  for (int i = 0; i < Hand::kPairFilterSize[pair_qty - 1]; i++) {
+  for (int i = 0; i < Hand::kPairFilterSize.at(pair_qty - 1); i++) {
     for (int j = 0; j < 15; j++){
-      Cards::bitcards tmpfilter = (Hand::pairFilters[pair_qty - 1][i] << j);
+      Cards::bitcards tmpfilter = (Hand::kPairFilters.at(pair_qty - 1).at(i) << j);
       if ((src & tmpfilter) == tmpfilter) {
         Cards::bitcards j = {};
         HandSummary hs = Hand::summarize(tmpfilter, j);
@@ -193,9 +181,9 @@ void uecda::Hand::pushPair(Cards::bitcards src, std::vector<Hand> &hand_vec, int
 void uecda::Hand::pushPairWithJoker(Cards::bitcards src, std::vector<Hand> &hand_vec, int pair_qty) {
   if (pair_qty < 1 || pair_qty > 4) { return; } // フィルターを定義していないseq_qtyが来たら何もしない。
 
-  for (int i = 0; i < Hand::kPairFilterSize[pair_qty - 1]; i++) {
+  for (int i = 0; i < Hand::kPairFilterSize.at(pair_qty - 1); i++) {
     for (int j = 0; j < 15; j++) {
-      Cards::bitcards tmpfilter = (Hand::pairFilters[pair_qty - 1][i] << j);
+      Cards::bitcards tmpfilter = (Hand::kPairFilters.at(pair_qty - 1).at(i) << j);
       if (Cards::count(src & tmpfilter) == pair_qty - 1) {
         Cards::bitcards c = (src & tmpfilter);
         Cards::bitcards j = (~src & tmpfilter);
@@ -213,7 +201,7 @@ void uecda::Hand::pushSequence(Cards::bitcards src, std::vector<Hand> &hand_vec,
   for(int i = 0; i < 4; i++) {
     for(int j = 0; j <= 15 - seq_qty; j++) {
       /* filterを、i番目のスートでj番目から始めるものに適用できるようシフトする。 */
-      Cards::bitcards tmpfilter = (Hand::sequenceFilters[seq_qty - 1] << (15 * i + j));
+      Cards::bitcards tmpfilter = (Hand::kSequenceFilters.at(seq_qty - 1) << (15 * i + j));
       if((src & tmpfilter) == tmpfilter) { 
         Cards::bitcards j = {};
         HandSummary hs = Hand::summarize(tmpfilter, j);
@@ -230,7 +218,7 @@ void uecda::Hand::pushSequenceWithJoker(Cards::bitcards src, std::vector<Hand> &
   for(int i = 0; i < 4; i++) {
     for(int j = 0; j <= 15 - seq_qty; j++) {
       /* filterを、i番目のスートでj番目から始めるものに適用できるようシフトする。 */
-      Cards::bitcards tmpfilter = (Hand::sequenceFilters[seq_qty - 1] << (15 * i + j));
+      Cards::bitcards tmpfilter = (Hand::kSequenceFilters.at(seq_qty - 1) << (15 * i + j));
       if (Cards::count(src & tmpfilter) == seq_qty - 1) {
         Cards::bitcards c = (src & tmpfilter);
         Cards::bitcards j = (~src & tmpfilter);

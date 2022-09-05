@@ -9,10 +9,10 @@ void uecda::common::printCommunicationBody(CommunicationBody src) {
 
     for (int j = 0; j < 15; j++) {
       std::cout << "  ";
-      if (src[i][j] == 0) {
+      if (src.at(i).at(j) == 0) {
         std::cout << " ";
       } else {
-        std::cout << src[i][j];
+        std::cout << src.at(i).at(j);
       }
       std::cout << " |";
     }

@@ -4,7 +4,7 @@ uecda::Cards::Cards(uecda::common::CommunicationBody src) {
   this->cards_ = 0;
 
   /* Joker。 */
-  if (src[4][1] == 2) {
+  if (src.at(4).at(1) == 2) {
     this->cards_++;
   }
   this->cards_ <<= 1;
@@ -12,7 +12,7 @@ uecda::Cards::Cards(uecda::common::CommunicationBody src) {
   /* Joker以外の各札。 */
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 15; j++) {
-      if (src[i][j] == 1) {
+      if (src.at(i).at(j) == 1) {
         this->cards_++;
       }
       this->cards_ <<= 1;
@@ -106,22 +106,25 @@ uecda::Cards::bitcards uecda::Cards::strongestOrder() const {
   return tmp & (-tmp);
 }
 
-void uecda::Cards::putCards(uecda::common::CommunicationBody dst) const {
+void uecda::Cards::putCards(uecda::common::CommunicationBody &dst) const {
   bitcards src = this->cards_;
 
   /* Joker以外の各札。 */
   for (int i = 3; i >= 0; i--) {
     for (int j = 14; j >= 0; j--) {
-      dst[i][j] = src % 2;
+      dst.at(i).at(j) = src % 2;
       src >>= 1;
     }
   }
   /* Joker。 */
-  dst[4][1] = (src % 2) * 2;
+  dst.at(4).at(1) = (src % 2) * 2;
 }
 
 
-void uecda::Cards::printCards(uecda::common::CommunicationBody src) {
+void uecda::Cards::print() {
+  common::CommunicationBody tmp = {};
+  this->putCards(tmp);
+
   std::cout << "-----------------------------------------------------------------------------\n"
                " |  * |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 |  J |  Q |  K |  1 |  2 |  * |\n"
                "-----------------------------------------------------------------------------\n";
@@ -145,9 +148,9 @@ void uecda::Cards::printCards(uecda::common::CommunicationBody src) {
     }
     for (int order = 0; order < 15; order++) {
       std::cout << "  ";
-      if (src[suit][order] == 1) {
+      if (tmp.at(suit).at(order) == 1) {
         std::cout << 1;
-      } else if (src[suit][order] == 2) {
+      } else if (tmp.at(suit).at(order) == 2) {
         std::cout << 2;
       } else {
         std:: cout << " ";

@@ -20,12 +20,13 @@ namespace uecda {
    public:
     enum class GAME_FINISH_STATE { kContinue, kRoundFinish, kGameFinish };
 
+    /* クライアントの初期化。通信用テーブルサイズの関係でプレイヤ名は15文字以内に訂正する。 */
     UECdaClient(std::string pname = kDefaultPlayerName,
                 int port = kDefaultPort,
                 std::string sname = kDefaultServerHostname):
                 server_hostname_(sname),
                 port_(port),
-                player_name_(pname) {};
+                player_name_(pname.substr(0, 15)) {}
 
     /* サーバに接続してゲームに参加する。自分のプレーヤ番号を返す。 */
     int enterGame();
@@ -40,13 +41,13 @@ namespace uecda {
     }
 
     /* サーバからラウンド開始時の手札を受け取る。 */
-    void receiveMyInitialCards(uecda::common::CommunicationBody dst) const;
+    void receiveMyInitialCards(uecda::common::CommunicationBody& dst) const;
 
     /* カード交換時のカードの提出 */
     void sendExchangeCards(uecda::common::CommunicationBody cards) const;
 
     /* カードを受け取る。 */
-    void receiveMyCards(uecda::common::CommunicationBody dst) const;
+    void receiveMyCards(uecda::common::CommunicationBody& dst) const;
 
     /* カードを提出し受理されたか否かを返す */
     bool sendSubmissionCards(uecda::common::CommunicationBody src) const;
@@ -55,7 +56,7 @@ namespace uecda {
     GAME_FINISH_STATE receiveGameFinishState(void) const;
 
     /* 場札を受け取る */
-    void receiveTableCards(uecda::common::CommunicationBody dst) const;
+    void receiveTableCards(uecda::common::CommunicationBody& dst) const;
 
    private:
     static constexpr int kProtocolVersion = 20070;
@@ -91,7 +92,7 @@ namespace uecda {
     void sendClientProfile() const;
 
     /* サーバからカードを受け取ってdst_tableに埋め込む。 */
-    void receiveCommunicationBody(uecda::common::CommunicationBody dst) const;
+    void receiveCommunicationBody(uecda::common::CommunicationBody& dst) const;
 
     /* サーバからカードを受け取ってdst_tableに埋め込む。 */
     void sendCommunicationBody(uecda::common::CommunicationBody src) const;

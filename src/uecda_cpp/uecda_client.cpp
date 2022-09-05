@@ -25,7 +25,7 @@ int uecda::UECdaClient::enterGame(void) {
   return my_playernum;
 }
 
-void uecda::UECdaClient::receiveMyInitialCards(uecda::common::CommunicationBody dst) const {
+void uecda::UECdaClient::receiveMyInitialCards(uecda::common::CommunicationBody& dst) const {
   try {
     receiveCommunicationBody(dst);
   } catch (const ReceiveCommunicationBodyException& e) {
@@ -34,7 +34,7 @@ void uecda::UECdaClient::receiveMyInitialCards(uecda::common::CommunicationBody 
   }
 }
 
-void uecda::UECdaClient::receiveMyCards(uecda::common::CommunicationBody dst) const {
+void uecda::UECdaClient::receiveMyCards(uecda::common::CommunicationBody& dst) const {
   try {
     receiveCommunicationBody(dst);
   } catch (const ReceiveCommunicationBodyException& e) {
@@ -90,7 +90,7 @@ uecda::UECdaClient::GAME_FINISH_STATE uecda::UECdaClient::receiveGameFinishState
 }
 
 /* 場札を受け取る */
-void uecda::UECdaClient::receiveTableCards(uecda::common::CommunicationBody dst) const {
+void uecda::UECdaClient::receiveTableCards(uecda::common::CommunicationBody& dst) const {
   try {
     receiveCommunicationBody(dst);
   } catch (const SendCommunicationBodyException& e) {
@@ -99,9 +99,9 @@ void uecda::UECdaClient::receiveTableCards(uecda::common::CommunicationBody dst)
   }
 }
 
-void uecda::UECdaClient::receiveCommunicationBody(uecda::common::CommunicationBody dst_table) const {
-  uecda::common::CommunicationBody src_table = {{}};
-  if (read(this->sockfd_, src_table, 4 * 8 * 15) <= 0) {
+void uecda::UECdaClient::receiveCommunicationBody(uecda::common::CommunicationBody& dst_table) const {
+  uecda::common::CommunicationBody src_table = {};
+  if (read(this->sockfd_, &src_table, sizeof(src_table)) <= 0) {
     throw ReceiveCommunicationBodyException();
   }
 
@@ -109,21 +109,21 @@ void uecda::UECdaClient::receiveCommunicationBody(uecda::common::CommunicationBo
      ホストオーダーに変換した上でコピー。 */
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 15; j++) {
-      dst_table[i][j] = ntohl(src_table[i][j]);
+      dst_table.at(i).at(j) = ntohl(src_table.at(i).at(j));
     }
   }
 }
 
 void uecda::UECdaClient::sendCommunicationBody(uecda::common::CommunicationBody src_table) const {
-  uecda::common::CommunicationBody dst_table = {{}};
+  uecda::common::CommunicationBody dst_table = {};
   /* テーブルの要素をホストオーダーから
      ネットワークオーダーに変換した上でコピー。 */
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 15; j++) {
-      dst_table[i][j] = htonl(src_table[i][j]);
+      dst_table.at(i).at(j) = htonl(src_table.at(i).at(j));
     }
   }
-  if (write(this->sockfd_, dst_table, 4 * 8 * 15) <= 0) {
+  if (write(this->sockfd_, &dst_table, sizeof(dst_table)) <= 0) {
     throw SendCommunicationBodyException();
   }
 }
@@ -164,11 +164,10 @@ void uecda::UECdaClient::openSocket() {
 
 /* クライアントの情報を送信 */
 void uecda::UECdaClient::sendClientProfile() const {
-  uecda::common::CommunicationBody profile = {{}};
-  profile[0][0] = UECdaClient::kProtocolVersion;
-  for (int i = 0; i < 15; i++) {
-    profile[1][i] = (int)this->player_name_[i];
-  }
+  uecda::common::CommunicationBody profile = {};
+  profile.at(0).at(0) = UECdaClient::kProtocolVersion;
+
+  std::copy(this->player_name_.begin(), this->player_name_.end(), profile.at(1).begin());
 
   try {
     sendCommunicationBody(profile);

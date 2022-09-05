@@ -31,7 +31,7 @@ namespace uecda {
     static int count(bitcards src);
 
     /* カードを返す。 */
-    bitcards getCard() const { return this->cards_; }
+    bitcards toBitcards() const { return this->cards_; }
 
     /* カードに含まれるスートを4bit形式で返す。 */
     int getSuits() const;
@@ -49,10 +49,10 @@ namespace uecda {
     bitcards strongestOrder() const;
 
     /* デバッグ出力用に配列にカードを埋め込む。 */
-    void putCards(uecda::common::CommunicationBody dst) const;
+    void putCards(uecda::common::CommunicationBody& dst) const;
 
-    /* デバッグ用に与えられたカードを出力。 */
-    static void printCards(uecda::common::CommunicationBody src);
+    /* デバッグ用にカードを出力。 */
+    void print();
 
     /* 与えられたカードを追加する。 */
     Cards& operator +=(const Cards &src) {
@@ -80,9 +80,34 @@ namespace uecda {
       return dst;
     }
 
+    /* 等しいか。 */
+    bool operator ==(const Cards &src) const {
+      return this->cards_ == src.cards_;
+    }
+
+    /* 等しくないか。 */
+    bool operator !=(const Cards &src) const {
+      return !(*this == src);
+    }
+
+    /* 与えられたカードをすべて含むか。 */
+    bool hasAllOf(Cards c) const {
+      return (c - *this).quantity() == 0;
+    }
+
+    /* 与えられたカードを1枚以上含むか。 */
+    bool hasAnyOf(Cards c) const {
+      return (c.quantity() == 0) || (*this - c) != *this;
+    }
+
     /* カードに与えられたフィルターをかけた結果を返す。 */
     bitcards filterCards(bitcards filter) const {
       return (this->cards_ & filter);
+    }
+
+    /* ジョーカーを除く。ジョーカーはワイルドカードでどかしづらいため。 */
+    void deleteJoker() {
+      this->cards_ &= 0xfffffffffffffff;
     }
 
    private:
