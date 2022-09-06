@@ -78,9 +78,9 @@ class UECdaState {
     int cur_seat_idx = std::find(num_on_seats.begin(), num_on_seats.end(), cur_player_num_) - num_on_seats.begin();
 
     /* 上がっていないプレイヤ内で次のプレイヤを探す。 */
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < record_.has_passed.size(); i++) {
       int nextPlayerNum = num_on_seats.at((cur_seat_idx + i + 1) % num_on_seats.size());
-      if (!table_.is_out.at(nextPlayerNum)) {
+      if (!record_.has_passed.at(nextPlayerNum)) {
         return nextPlayerNum;
       }
     }
@@ -98,7 +98,7 @@ class UECdaState {
     return last_summary.has_joker && last_summary.quantity == 1 && hand.getWholeBitcards() == spade3;
   }
 
-  bool submissionCausesLock(uecda::Hand hand) const {
+  bool submissionCausesLock(const uecda::Hand hand) const {
     return this->last_action_.getSummary().suits == hand.getSummary().suits;
   }
 
@@ -108,6 +108,16 @@ class UECdaState {
       return summary.quantity >= 5;
     } else {
       return summary.quantity >= 4;
+    }
+  }
+
+  void finishTrick() {
+    table_hand_ = uecda::Hand();
+    table_.is_lock = false;
+    table_.is_start_of_trick = true;
+    /* 上がっているプレイヤはパス扱い。 */
+    for (int i = 0; i < record_.has_passed.size(); i++) {
+      record_.has_passed.at(i) = table_.is_out.at(i);
     }
   }
 
