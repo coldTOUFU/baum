@@ -243,13 +243,11 @@ class GetLastActionTest: public UECdaStateTest {
 };
 
 TEST_F(NextTest, Pass) {
-  src_table_hand_ = Hand();
-  updateSrcState();
-  
-  dst_player_num_ = src_player_num_;
-  dst_card_quantity_of_players_ = {2, 1, 1, 1, 1};
+  dst_table_hand_ = src_table_hand_;
+  dst_card_quantity_of_players_ = src_card_quantity_of_players_;
+  dst_record_.last_submitted_player = src_record_.last_submitted_player;
   dst_record_.has_passed = {true};
-  dst_player_cards_.at(0) = Cards({{{}, {0, 1, 1}}});
+  dst_player_cards_ = src_player_cards_;
   dst_last_action_ = Hand();
   updateDstState();
 
@@ -259,7 +257,6 @@ TEST_F(NextTest, Pass) {
 }
 
 TEST_F(NextTest, PassAtLast) {
-  src_table_hand_ = Hand();
   src_record_.last_submitted_player = src_player_num_;
   src_record_.has_passed = {false, true, true, true, true};
   src_last_action_ = Hand();
@@ -267,9 +264,9 @@ TEST_F(NextTest, PassAtLast) {
   
   dst_player_num_ = 0;
   dst_is_start_of_trick_ = true;
-  dst_card_quantity_of_players_ = {2, 1, 1, 1, 1};
+  dst_card_quantity_of_players_ = src_card_quantity_of_players_;
   dst_table_hand_ = Hand();
-  dst_player_cards_.at(0) = Cards({{{}, {0, 1, 1}}});
+  dst_player_cards_.at(0) = src_player_cards_.at(0);
   dst_last_action_ = Hand();
   updateDstState();
 
@@ -282,18 +279,19 @@ TEST_F(NextTest, PassAtLastWhenLastSubmittedPlayerIsOut) {
   src_card_quantity_of_players_ = {2, 1, 1, 1, 0};
   src_is_out_ = {false, false, false, false, true};
   src_table_hand_ = Hand();
-  src_record_.last_submitted_player = 4;
   src_record_.has_passed = {false, true, true, true, true};
   src_player_cards_.at(4) = {};
   updateSrcState();
   
-  dst_player_num_ = 0;
+  dst_player_num_ = src_player_num_;
   dst_is_start_of_trick_ = true;
-  dst_card_quantity_of_players_ = {2, 1, 1, 1, 1};
+  dst_card_quantity_of_players_ = src_card_quantity_of_players_;
+  dst_is_out_ = src_is_out_;
   dst_table_hand_ = Hand();
-  dst_record_.has_passed = {true, true};
-  dst_player_cards_.at(0) = Cards({{{}, {0, 1, 1}}});
-  dst_player_cards_.at(4) = Cards();
+  dst_record_.last_submitted_player = src_record_.last_submitted_player;
+  dst_record_.has_passed = {false, false, false, false, true};
+  dst_player_cards_.at(0) = src_player_cards_.at(0);
+  dst_player_cards_.at(4) = src_player_cards_.at(4);
   dst_last_action_ = Hand();
   updateDstState();
 
@@ -303,9 +301,11 @@ TEST_F(NextTest, PassAtLastWhenLastSubmittedPlayerIsOut) {
 }
 
 TEST_F(NextTest, IllegalSubmission) {
-  dst_card_quantity_of_players_ = {2, 1, 1, 1, 1};
+  dst_card_quantity_of_players_ = src_card_quantity_of_players_;
+  dst_table_hand_ = src_table_hand_;
+  dst_record_.last_submitted_player = src_record_.last_submitted_player;
   dst_record_.has_passed = {true};
-  dst_player_cards_.at(0) = Cards({{{}, {0, 1, 1}}});
+  dst_player_cards_.at(0) = src_player_cards_.at(0);
   dst_last_action_ = Hand();
   updateDstState();
 
@@ -315,7 +315,7 @@ TEST_F(NextTest, IllegalSubmission) {
 }
 
 TEST_F(NextTest, NormalSubmission) {
-  Hand next_action = Hand({{{}, {0, 1}}});
+  Hand next_action = Hand({{{}, {0, 0, 1}}});
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
@@ -324,7 +324,8 @@ TEST_F(NextTest, NormalSubmissionWithJoker) {
   src_player_cards_.at(0) = Cards({{{}, {0, 1}, {}, {}, {1}}});
   updateSrcState();
 
-  dst_table_hand_ = Hand({{{}, {0, 0, 2}}});
+  dst_table_hand_ = Hand({2}); // uecda::Handの仕様に合わせて、ジョーカーは左端に置いている。
+  dst_last_action_ = dst_table_hand_;
   updateDstState();
 
   Hand next_action = dst_table_hand_;
@@ -338,20 +339,21 @@ TEST_F(NextTest, SubmissionAndGettingOut) {
   updateSrcState();
 
   dst_card_quantity_of_players_ = {0, 1, 1, 1, 1};
-  dst_is_out_ = {1};
+  dst_is_out_ = {true};
   dst_record_.has_passed = {true};
   dst_player_cards_.at(0) = Cards();
   dst_next_ranks_ = {0, -1, -1, -1, -1};
   updateDstState();
 
-  Hand next_action = Hand({{{}, {0, 1}}});
+  Hand next_action = Hand({{{}, {0, 0, 1}}});
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
 
 TEST_F(NextTest, SubmissionAndGameFinished) {
   src_card_quantity_of_players_ = {1, 1, 0, 0, 0};
-  src_is_out_ = {1, 1, 0, 0, 0};
+  src_is_out_ = {false, false, true, true, true};
+  src_record_.has_passed = {false, false, true, true, true};
   src_player_cards_.at(0) = Cards({{{}, {0, 0, 1}}});
   src_player_cards_.at(2) = Cards();
   src_player_cards_.at(3) = Cards();
@@ -360,7 +362,7 @@ TEST_F(NextTest, SubmissionAndGameFinished) {
   updateSrcState();
 
   dst_card_quantity_of_players_ = {0, 1, 0, 0, 0};
-  dst_is_out_ = {1, 1, 1, 1, 1};
+  dst_is_out_ = {true, true, true, true, true};
   dst_record_.has_passed = {true, true, true, true, true};
   dst_player_cards_.at(0) = Cards();
   dst_player_cards_.at(2) = Cards();
@@ -369,7 +371,7 @@ TEST_F(NextTest, SubmissionAndGameFinished) {
   dst_next_ranks_ = {3, 4, 0, 1, 2};
   updateDstState();
 
-  Hand next_action = Hand({{{}, {0, 1}}});
+  Hand next_action = Hand({{{}, {0, 0, 1}}});
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
@@ -380,6 +382,7 @@ TEST_F(NextTest, SubmissionAndLock) {
 
   dst_is_lock_ = true;
   dst_table_hand_ = Hand({0, 0, 1});
+  dst_last_action_ = dst_table_hand_;
   updateDstState();
 
   Hand next_action = dst_table_hand_;
@@ -396,6 +399,7 @@ TEST_F(NextTest, SubmissionAndRev) {
 
   dst_is_rev_ = true;
   dst_table_hand_ = Hand({{{0, 0, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}});
+  dst_last_action_ = dst_table_hand_;
   updateDstState();
 
   Hand next_action = dst_table_hand_;
@@ -407,11 +411,13 @@ TEST_F(NextTest, Submission8GiriSingle) {
   src_player_cards_.at(0) = Cards({{{}, {0, 1, 0, 0, 0, 0, 1}}});
   updateSrcState();
 
+  dst_player_num_ = src_player_num_;
   dst_is_start_of_trick_ = true;
   dst_table_hand_ = Hand();
+  dst_last_action_ = Hand({{{}, {0, 0, 0, 0, 0, 0, 1}}});
   updateDstState();
 
-  Hand next_action = Hand({{{}, {0, 0, 0, 0, 0, 0, 1}}});
+  Hand next_action = dst_last_action_;
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
@@ -422,11 +428,13 @@ TEST_F(NextTest, Submission8GiriPair) {
   src_player_cards_.at(0) = Cards({{{}, {0, 1, 0, 0, 0, 0, 1}, {0, 0, 0, 0, 0, 0, 1}}});
   updateSrcState();
 
+  dst_player_num_ = src_player_num_;
   dst_is_start_of_trick_ = true;
   dst_table_hand_ = Hand();
+  dst_last_action_ = Hand({{{}, {0, 0, 0, 0, 0, 0, 1}, {0, 0, 0, 0, 0, 0, 1}}});
   updateDstState();
 
-  Hand next_action = Hand({{{}, {0, 0, 0, 0, 0, 0, 1}, {0, 0, 0, 0, 0, 0, 1}}});
+  Hand next_action = dst_last_action_;
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
@@ -437,11 +445,13 @@ TEST_F(NextTest, Submission8GiriSequence) {
   src_player_cards_.at(0) = Cards({{{}, {0, 1, 0, 0, 1, 1, 1}}});
   updateSrcState();
 
+  dst_player_num_ = src_player_num_;
   dst_is_start_of_trick_ = true;
   dst_table_hand_ = Hand();
+  dst_last_action_ = Hand({{{}, {0, 0, 0, 0, 1, 1, 1}}});
   updateDstState();
 
-  Hand next_action = Hand({{{}, {0, 0, 0, 0, 1, 1, 1}}});
+  Hand next_action = dst_last_action_;
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
@@ -451,11 +461,13 @@ TEST_F(NextTest, SubmissionSpade3GaeshiSingle) {
   src_player_cards_.at(0) = Cards({{{0, 1}, {0, 1}}});
   updateSrcState();
 
+  dst_player_num_ = src_player_num_;
   dst_is_start_of_trick_ = true;
   dst_table_hand_ = Hand();
+  dst_last_action_ = Hand({0, 1});
   updateDstState();
 
-  Hand next_action = Hand({0, 1});
+  Hand next_action = dst_last_action_;
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }

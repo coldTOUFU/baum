@@ -29,7 +29,7 @@ class UECdaState {
 
   /* 受け取った手を適用して得られる状態を返す。 */
   UECdaState next(uecda::Hand const &hand) const {
-    if (hand.getSummary().is_pass || this->isLegal(hand)) {
+    if (hand.getSummary().is_pass || !this->isLegal(hand)) {
       return this->simulatePass();
     } else {
       return this->simulateSubmission(hand);
@@ -119,11 +119,15 @@ class UECdaState {
 
   bool submissionIsSpade3Gaeshi(const uecda::Hand& hand) const {
     uecda::Cards::bitcards spade3 = ((uecda::Cards::bitcards)0b010000000000000 << 45);
-    uecda::HandSummary last_summary = last_action_.getSummary();
-    return last_summary.has_joker && last_summary.quantity == 1 && hand.getWholeBitcards() == spade3;
+    uecda::HandSummary table_summary = table_hand_.getSummary();
+    return table_summary.has_joker && table_summary.quantity == 1 && hand.getWholeBitcards() == spade3;
   }
 
   bool submissionCausesLock(const uecda::Hand hand) const {
+    /* ジョーカー1枚出しの場合は縛りでないとする。 */
+    if (hand.getSummary().quantity == 1 && hand.getSummary().has_joker) {
+      return false;
+    }
     return this->last_action_.getSummary().suits == hand.getSummary().suits;
   }
 
@@ -166,6 +170,7 @@ class UECdaState {
       os << rank << " ";
     }
     os << std::endl;
+    os << "# 最後の着手" << std::endl;
     os << src.last_action_;
     return os;
   }
