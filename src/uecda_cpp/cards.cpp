@@ -122,42 +122,5 @@ void uecda::Cards::putCards(uecda::common::CommunicationBody &dst) const {
 
 
 void uecda::Cards::print() {
-  common::CommunicationBody tmp = {};
-  this->putCards(tmp);
-
-  std::cout << "-----------------------------------------------------------------------------\n"
-               " |  * |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 |  J |  Q |  K |  1 |  2 |  * |\n"
-               "-----------------------------------------------------------------------------\n";
-  for (int suit = 0; suit < 5; suit++) {
-    switch (suit) {
-      case Cards::kSpade:
-        std::cout << "S|";
-        break;
-      case Cards::kHeart:
-        std::cout << "H|";
-        break;
-      case Cards::kDiamond:
-        std::cout << "D|";
-        break;
-      case Cards::kClover:
-        std::cout << "C|";
-        break;
-      default:
-        std::cout << "*|";
-        break;
-    }
-    for (int order = 0; order < 15; order++) {
-      std::cout << "  ";
-      if (tmp.at(suit).at(order) == 1) {
-        std::cout << 1;
-      } else if (tmp.at(suit).at(order) == 2) {
-        std::cout << 2;
-      } else {
-        std:: cout << " ";
-      }
-      std::cout << " |";
-    }
-    std::cout << std::endl;
-    std::cout << "-----------------------------------------------------------------------------" << std::endl;
-  }
+  std::cout << *this;
 }

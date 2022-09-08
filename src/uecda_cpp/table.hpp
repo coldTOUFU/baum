@@ -1,12 +1,34 @@
 #ifndef TABLE_HPP_
 #define TABLE_HPP_
 
+#include <initializer_list>
 #include <iostream>
 
 #include "uecda_common.hpp"
 
 namespace uecda {
   struct Table {
+    /* テストと探索時シミュレーション用。 */
+    Table(bool arg_is_my_turn,
+          int arg_whose_turn,
+          bool arg_is_start_of_trick,
+          bool arg_is_rev,
+          bool arg_is_lock,
+          std::array<int, 5> arg_card_quantity_of_players,
+          std::array<bool, 5> arg_is_out,
+          std::array<int, 5> arg_rank_of_players,
+          std::array<int, 5> arg_player_num_on_seats):
+        is_my_turn(arg_is_my_turn),
+        whose_turn(arg_whose_turn),
+        is_start_of_trick(arg_is_start_of_trick),
+        is_rev(arg_is_rev),
+        is_lock(arg_is_lock),
+        card_quantity_of_players(arg_card_quantity_of_players),
+        is_out(arg_is_out),
+        rank_of_players(arg_rank_of_players),
+        player_num_on_seats(arg_player_num_on_seats) {}
+
+    /* 実戦でのサーバからの通信処理用。 */
     Table(uecda::common::CommunicationBody src) {
       this->is_my_turn = src.at(5).at(2);
       this->whose_turn = src.at(5).at(3);
@@ -22,11 +44,19 @@ namespace uecda {
     }
 
     void print() {
-      std::cout << "自分のターン？: " << (this->is_my_turn ? "YES" : "NO") << std::endl;
-      std::cout << "誰のターン: " << (this->whose_turn) << std::endl;
-      std::cout << "場に何もない？" << (this->is_start_of_trick ? "YES" : "NO") << std::endl;
-      std::cout << "革命中？" << (this->is_rev ? "YES" : "NO") << std::endl;
-      std::cout << "縛り中？" << (this->is_lock ? "YES" : "NO") << std::endl;
+      std::cout << *this;
+    }
+
+    bool operator ==(const Table &src) const {
+      return is_my_turn == src.is_my_turn &&
+          whose_turn == src.whose_turn &&
+          is_start_of_trick == src.is_start_of_trick &&
+          is_rev == src.is_rev &&
+          is_lock == src.is_lock &&
+          std::equal(card_quantity_of_players.begin(), card_quantity_of_players.end(), src.card_quantity_of_players.begin()) &&
+          std::equal(is_out.begin(), is_out.end(), src.is_out.begin()) &&
+          std::equal(rank_of_players.begin(), rank_of_players.end(), src.rank_of_players.begin()) &&
+          std::equal(player_num_on_seats.begin(), player_num_on_seats.end(), src.player_num_on_seats.begin());
     }
 
     bool is_my_turn;                             // 自分のターンか？
@@ -38,6 +68,16 @@ namespace uecda {
     std::array<bool, 5> is_out;                  // 各プレイヤがあがったか。
     std::array<int, 5> rank_of_players;          // 各プレイヤの現階級。
     std::array<int, 5> player_num_on_seats;      // 各席のプレイヤの番号。
+
+    friend std::ostream& operator<<(std::ostream& os, const Table& src) {
+      os << "Table" << std::endl;
+      os << "  自分のターン？: " << (src.is_my_turn ? "YES" : "NO") << std::endl;
+      os << "  誰のターン: " << (src.whose_turn) << std::endl;
+      os << "  場に何もない？: " << (src.is_start_of_trick ? "YES" : "NO") << std::endl;
+      os << "  革命中？: " << (src.is_rev ? "YES" : "NO") << std::endl;
+      os << "  縛り中？: " << (src.is_lock ? "YES" : "NO") << std::endl;
+      return os;
+    }
   };
 }
 

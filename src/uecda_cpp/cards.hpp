@@ -112,6 +112,48 @@ namespace uecda {
 
    private:
     bitcards cards_;
+
+    friend std::ostream& operator<<(std::ostream& os, const Cards& src) {
+      common::CommunicationBody tmp = {};
+      src.putCards(tmp);
+
+      os << "-----------------------------------------------------------------------------" << std::endl;
+      os << " |  * |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 |  J |  Q |  K |  1 |  2 |  * |" << std::endl;
+      os << "-----------------------------------------------------------------------------" << std::endl;
+      for (int suit = 0; suit < 5; suit++) {
+        switch (suit) {
+          case Cards::kSpade:
+            os << "S|";
+            break;
+          case Cards::kHeart:
+            os << "H|";
+            break;
+          case Cards::kDiamond:
+            os << "D|";
+            break;
+          case Cards::kClover:
+            os << "C|";
+            break;
+          default:
+            os << "*|";
+            break;
+        }
+        for (int order = 0; order < 15; order++) {
+          os << "  ";
+          if (tmp.at(suit).at(order) == 1) {
+            os << 1;
+          } else if (tmp.at(suit).at(order) == 2) {
+            os << 2;
+          } else {
+            std:: cout << " ";
+          }
+          os << " |";
+        }
+        os << std::endl;
+        os << "-----------------------------------------------------------------------------" << std::endl;
+      }
+      return os;
+    }
   };
 }
 

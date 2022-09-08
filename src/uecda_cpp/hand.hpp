@@ -54,10 +54,11 @@ namespace uecda {
 
     /* デバッグ用に手を出力。 */
     void print() const {
-      uecda::common::CommunicationBody src = {{}};
-      this->putCards(src);
-      this->summary_.print();
-      common::printCommunicationBody(src);
+      std::cout << *this;
+    }
+
+    bool operator ==(const Hand &src) const {
+      return cards_ == src.cards_ && joker_ == src.joker_ && summary_ == src.summary_;
     }
 
    private:
@@ -101,6 +102,14 @@ namespace uecda {
     /* ジョーカー必ず込みで与えられた配列に指定された枚数の階段を作る。 */
     static void pushSequenceWithJoker(Cards::bitcards src,
                                       std::vector<Hand>& hand_vec, int seq_qty);
+
+    friend std::ostream& operator<<(std::ostream& os, const Hand& src) {
+      common::CommunicationBody body = {{}};
+      src.putCards(body);
+      os << src.summary_;
+      os << (common::CommunicationBody)body;
+      return os;
+    }
   };
 }
 
