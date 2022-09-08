@@ -40,6 +40,9 @@ class UECdaState {
   std::vector<uecda::Hand> legalActions() const {
     std::vector<uecda::Hand> dst;
     uecda::Hand::pushHands(player_cards_.at(cur_player_num_), dst);
+    const std::vector<uecda::Hand>::iterator& end_of_legal = std::remove_if(dst.begin(), dst.end(),
+        [=](const uecda::Hand& h) { return !h.isLegal(table_, table_hand_); });
+    dst.erase(end_of_legal, dst.end());
     return dst;
   }
 
