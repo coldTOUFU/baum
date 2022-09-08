@@ -4,7 +4,7 @@ UECdaState UECdaState::simulatePass() const {
   UECdaState result = UECdaState(*this);
 
   /* 全員がパスし終わったら、最後にパスした人(=現状態におけるプレイヤ)からトリック開始。 */
-  bool has_all_passed = std::all_of(record_.has_passed.begin(), record_.has_passed.end(), true);
+  bool has_all_passed = std::all_of(record_.has_passed.begin(), record_.has_passed.end(), [](const auto& e) { return e; });
   if (has_all_passed) {
     result.finishTrick();
     result.last_action_ = uecda::Hand();

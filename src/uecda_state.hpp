@@ -22,7 +22,10 @@ class UECdaState {
       table_(table),
       player_cards_(player_cards),
       next_ranks_(next_ranks),
-      last_action_(last_action) {}
+      last_action_(last_action) {
+    /* UECdaStateでは、提出処理を常に受け付けたいのでtrueとする。 */
+    table_.is_my_turn = true;
+  }
 
   /* 受け取った手を適用して得られる状態を返す。 */
   UECdaState next(uecda::Hand const &hand) const {
@@ -42,7 +45,7 @@ class UECdaState {
 
   /* ゲームが終了しているか？ */
   bool isFinished() const {
-    return std::all_of(table_.is_out.begin(), table_.is_out.end(), true);
+    return std::all_of(table_.is_out.begin(), table_.is_out.end(), [](const auto& e) { return e; });
   }
 
   /* 指定されたプレイヤ番号の現時点での得点を返す。上がっていなければ0。 */
@@ -58,7 +61,26 @@ class UECdaState {
   uecda::Hand getLastAction() const {
     return last_action_;
   }
- 
+
+  constexpr UECdaState& operator =(const UECdaState& src) {
+    record_ = src.record_;
+    table_hand_ = src.table_hand_;
+    table_ = src.table_;
+    player_cards_ = src.player_cards_;
+    next_ranks_ = src.next_ranks_;
+    last_action_ = src.last_action_;
+    return *this;
+  }
+
+  bool operator ==(const UECdaState& src) const {
+    return record_ == src.record_ &&
+        table_hand_ == src.table_hand_ &&
+        table_ == src.table_ &&
+        std::equal(player_cards_.begin(), player_cards_.end(), src.player_cards_.begin()) &&
+        std::equal(next_ranks_.begin(), next_ranks_.end(), src.next_ranks_.begin()) &&
+        last_action_ == src.last_action_;
+  }
+
  private:
   GameRecord record_;                        // ゲームの時系列情報。
   uecda::Hand table_hand_;                   // 場の手。
@@ -78,7 +100,7 @@ class UECdaState {
     int cur_seat_idx = std::find(num_on_seats.begin(), num_on_seats.end(), cur_player_num_) - num_on_seats.begin();
 
     /* 上がっていないプレイヤ内で次のプレイヤを探す。 */
-    for (int i = 0; i < record_.has_passed.size(); i++) {
+    for (unsigned int i = 0; i < record_.has_passed.size(); i++) {
       int nextPlayerNum = num_on_seats.at((cur_seat_idx + i + 1) % num_on_seats.size());
       if (!record_.has_passed.at(nextPlayerNum)) {
         return nextPlayerNum;
@@ -116,7 +138,7 @@ class UECdaState {
     table_.is_lock = false;
     table_.is_start_of_trick = true;
     /* 上がっているプレイヤはパス扱い。 */
-    for (int i = 0; i < record_.has_passed.size(); i++) {
+    for (unsigned int i = 0; i < record_.has_passed.size(); i++) {
       record_.has_passed.at(i) = table_.is_out.at(i);
     }
   }
@@ -124,6 +146,26 @@ class UECdaState {
   UECdaState simulatePass() const;
 
   UECdaState simulateSubmission(const uecda::Hand& hand) const;
+
+  friend std::ostream& operator<<(std::ostream& os, const UECdaState& src) {
+    os << "# GameRecord" << std::endl;
+    os << src.record_;
+    os << "# 場の手" << std::endl;
+    os << src.table_hand_;
+    os << "# Table" << std::endl;
+    os << src.table_;
+    os << "# 各プレイヤの手札" << std::endl;
+    for (const auto& cards: src.player_cards_) {
+      os << cards;
+    }
+    os << "# 各プレイヤの次階級" << std::endl;
+    for (const auto& rank: src.next_ranks_) {
+      os << rank << " ";
+    }
+    os << std::endl;
+    os << src.last_action_;
+    return os;
+  }
 };
 
 #endif // UECDA_STATE_HPP_
