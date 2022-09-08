@@ -49,9 +49,7 @@ UECdaState UECdaState::simulateSubmission(const uecda::Hand& hand) const {
   }
   
   /* 縛りの処理。 */
-  if (this->submissionCausesLock(hand)) {
-    result.table_.is_lock = true;
-  }
+  result.table_.is_lock = this->submissionCausesLock(hand);
 
   /* 革命の処理。 */
   if (this->submissionCausesRevolution(hand)) {
