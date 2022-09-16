@@ -55,6 +55,7 @@ class UECdaState {
     const std::vector<uecda::Hand>::iterator& end_of_legal = std::remove_if(dst.begin(), dst.end(),
         [=](const uecda::Hand& h) { return !h.isLegal(table_, table_hand_); });
     dst.erase(end_of_legal, dst.end());
+    dst.push_back(uecda::Hand()); // パスも合法手。
     return dst;
   }
 

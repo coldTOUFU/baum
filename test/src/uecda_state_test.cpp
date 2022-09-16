@@ -482,7 +482,8 @@ TEST_F(LegalActionsTest, Normal) {
     Hand({{{}, {0, 0, 1}, {0, 0, 1}}}),
     Hand({{{}, {0, 0, 1}, {}, {0, 0, 1}}}),
     Hand({{{}, {}, {0, 0, 1}, {0, 0, 1}}}),
-    Hand({{{}, {0, 0, 0, 1}, {0, 0, 0, 1}}})
+    Hand({{{}, {0, 0, 0, 1}, {0, 0, 0, 1}}}),
+    Hand()
   }};
 
   EXPECT_EQ(result_legal_actions.size(), dst_legal_actions.size());
