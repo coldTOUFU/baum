@@ -11,6 +11,18 @@
 
 class UECdaState {
  public:
+  UECdaState(): 
+      record_(),
+      table_hand_(),
+      table_(true, 0, true, false, false, {}, {}, {}, {}),
+      player_cards_(),
+      next_ranks_(),
+      last_action_()
+  {
+    /* UECdaStateでは、提出処理を常に受け付けたいのでtrueとする。 */
+    table_.is_my_turn = true;
+  }
+
   UECdaState(GameRecord record,
              uecda::Hand table_hand,
              uecda::Table table,
@@ -63,6 +75,10 @@ class UECdaState {
   /* 最後の着手(この盤面に至ったときの着手)を返す。 */
   uecda::Hand getLastAction() const {
     return last_action_;
+  }
+
+  void print() const {
+    std::cout << *this;
   }
 
   constexpr UECdaState& operator =(const UECdaState& src) {
