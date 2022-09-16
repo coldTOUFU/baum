@@ -2,6 +2,7 @@
 *.code-workspace
 *.log
 
+tmp/
 out/*
 test/out/*
 
