@@ -148,6 +148,7 @@ int main(int argc, char* argv[]) {
 
       /* 前の場札を更新(パスなら現在の場札と同じ) */
       last_table_hand = Hand(table_body);
+      last_playernum = table.whose_turn;
 
       /* 場札を受け取る */
       client.receiveTableCards(table_body);
