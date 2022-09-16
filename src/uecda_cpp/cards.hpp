@@ -18,6 +18,11 @@ namespace uecda {
     static constexpr int kDiamond = 2;
     static constexpr int kClover = 3;
 
+    /* カード全体。 */
+    static Cards all() {
+      return Cards(0b1'011111111111110'011111111111110'011111111111110'011111111111110);
+    }
+
     /* 空のカード。 */
     Cards(): cards_() {}
 
@@ -47,6 +52,30 @@ namespace uecda {
 
     /* 最強のカードを15bit形式で返す。 */
     bitcards strongestOrder() const;
+
+    /* カードを1つずつに分ける */
+    std::vector<Cards> devideIntoOneCards() {
+      bitcards src = this->cards_;
+      bitcards cur = (bitcards)1;
+      std::vector<Cards> result{};
+    
+      /* Joker以外の各札。 */
+      for (int i = 3; i >= 0; i--) {
+        for (int j = 14; j >= 0; j--) {
+          if (src % 2 == 1) {
+            result.push_back(Cards(cur));
+          }
+          src >>= 1;
+          cur <<= 1;
+        }
+      }
+      /* Joker。 */
+      if (src % 2 == 1) {
+        result.push_back(Cards(cur));
+      }
+
+      return result;
+    }
 
     /* デバッグ出力用に配列にカードを埋め込む。 */
     void putCards(uecda::common::CommunicationBody& dst) const;
