@@ -28,25 +28,13 @@ void simulate_random_dealing(const int my_playernum, const uecda::Cards my_cards
 
   std::vector<uecda::Cards> each_of_rest_cards = rest_cards.devideIntoOneCards();
   std::shuffle(each_of_rest_cards.begin(), each_of_rest_cards.end(), rand_engine);
-  std::vector<uecda::Cards>::const_iterator cursor = each_of_rest_cards.cbegin();
+  std::vector<uecda::Cards>::const_iterator begin_itr = each_of_rest_cards.cbegin();
+  std::vector<uecda::Cards>::const_iterator end_itr;
   for (int i = 0; i < 5; i++) {
     if (rest_quantity_of_not_dealt_cards.at(i) <= 0) { continue; }
 
-    player_cards.at(i) += std::accumulate(cursor, cursor + rest_quantity_of_not_dealt_cards.at(i), uecda::Cards{});
-    cursor += rest_quantity_of_not_dealt_cards.at(i);
-  }
-
-
-  for (const uecda::Cards card: each_of_rest_cards) {
-    std::vector<int> players_to_deal{};
-    for (int i = 0; i < 5; i++) {
-      if (i != my_playernum && !table.is_out.at(i) && rest_quantity_of_not_dealt_cards.at(i) > 0) {
-        players_to_deal.push_back(i);
-      }
-    }
-    std::uniform_int_distribution<int> dist(0, players_to_deal.size());
-    int random_playernum = dist(rand_engine);
-    player_cards.at(random_playernum) += card;
-    rest_quantity_of_not_dealt_cards.at(random_playernum) -= 1;
+    end_itr = std::next(begin_itr, rest_quantity_of_not_dealt_cards.at(i));
+    player_cards.at(i) += std::accumulate(begin_itr, end_itr, uecda::Cards{});
+    begin_itr = end_itr;
   }
 }
