@@ -1,10 +1,11 @@
 .vscode
 *.code-workspace
+*.o
 *.log
 
 tmp/
 external/FujiGokoroUECda/
-out/*
-test/out/*
+out/main
+test/out/uecda_state_test
 
 !.gitkeep
