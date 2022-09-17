@@ -32,4 +32,4 @@ $(TEST_OUTDIR)/uecda_state_test:	$(TEST_SRCDIR)/uecda_state_test.cpp $(OBJDIR)/u
 	$(CC) $(TEST_CFLAGS) -o $@ $^
 
 clean:
-	rm -f ./out/main ./out/obj/**/*.o ./out/obj/*.o ./test/out/*
+	rm -f ./out/main ./out/obj/**/*.o ./out/obj/*.o ./test/out/uecda_state_test
