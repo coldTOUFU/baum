@@ -3,7 +3,7 @@
 UECdaState UECdaState::simulatePass() const {
   UECdaState result = UECdaState(*this);
 
-  result.record_.has_passed.at(cur_player_num_) = true;
+  result.record_.has_passed.at(table_.whose_turn) = true;
   bool has_all_passed = std::all_of(result.record_.has_passed.begin(), result.record_.has_passed.end(), [](const auto& e) { return e; });
 
   /* 全員がパスし終わったら、最後にパスした人(=現状態におけるプレイヤ)からトリック開始。 */
@@ -23,12 +23,12 @@ UECdaState UECdaState::simulateSubmission(const uecda::Hand& hand) const {
 
   result.table_hand_ = hand;
   result.table_.whose_turn = this->nextPlayerNum();
-  result.record_.last_submitted_player = this->cur_player_num_;
+  result.record_.last_submitted_player = this->table_.whose_turn;
   result.table_.is_start_of_trick = false;
   result.last_action_ = hand;
 
   /* 提出者が出したカードを除く。 */
-  result.player_cards_.at(cur_player_num_) -= hand.getCards();
+  result.player_cards_.at(table_.whose_turn) -= hand.getCards();
   if (hand.getJoker() != uecda::Cards()) {
     result.player_cards_.at(table_.whose_turn).deleteJoker();
   }
@@ -59,8 +59,8 @@ UECdaState UECdaState::simulateSubmission(const uecda::Hand& hand) const {
   /* 8切・スぺ3返しの処理。 */
   if (this->submissionIs8Giri(hand) || this->submissionIsSpade3Gaeshi(hand)) {
     result.finishTrick();
-    if (!result.table_.is_out[cur_player_num_]) {
-      result.table_.whose_turn = cur_player_num_;
+    if (!result.table_.is_out[table_.whose_turn]) {
+      result.table_.whose_turn = table_.whose_turn;
     }
   }
 

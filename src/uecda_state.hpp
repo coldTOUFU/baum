@@ -51,7 +51,7 @@ class UECdaState {
   /* 合法手の全体を返す。 */
   std::vector<uecda::Hand> legalActions() const {
     std::vector<uecda::Hand> dst;
-    uecda::Hand::pushHands(player_cards_.at(cur_player_num_), dst);
+    uecda::Hand::pushHands(player_cards_.at(table_.whose_turn), dst);
     const std::vector<uecda::Hand>::iterator& end_of_legal = std::remove_if(dst.begin(), dst.end(),
         [=](const uecda::Hand& h) { return !h.isLegal(table_, table_hand_); });
     dst.erase(end_of_legal, dst.end());
@@ -108,16 +108,15 @@ class UECdaState {
   std::array<uecda::Cards, 5> player_cards_; // 各プレイヤの手札(プレイヤ番号でアクセス)。
   std::array<int, 5> next_ranks_;            // 次ゲームでの階級(プレイヤ番号でアクセス)。0で大富豪、4で大貧民。まだ上がっていないなら-1。
   uecda::Hand last_action_;                  // 最後に打たれた手。
-  const int &cur_player_num_ = table_.whose_turn; // プレイヤ番号へのエイリアス。
 
   bool isLegal(const uecda::Hand hand) const {
-    const uecda::Cards cards_of_cur_player = player_cards_.at(cur_player_num_);
+    const uecda::Cards cards_of_cur_player = player_cards_.at(table_.whose_turn);
     return cards_of_cur_player.hasAllOf(hand.getCards()) && hand.isLegal(table_, table_hand_);
   }
 
   int nextPlayerNum() const {
     auto& num_on_seats = table_.player_num_on_seats;
-    int cur_seat_idx = std::find(num_on_seats.begin(), num_on_seats.end(), cur_player_num_) - num_on_seats.begin();
+    int cur_seat_idx = std::find(num_on_seats.begin(), num_on_seats.end(), table_.whose_turn) - num_on_seats.begin();
 
     /* 上がっていないプレイヤ内で次のプレイヤを探す。 */
     for (unsigned int i = 0; i < record_.has_passed.size(); i++) {
@@ -126,7 +125,7 @@ class UECdaState {
         return nextPlayerNum;
       }
     }
-    return cur_player_num_;
+    return table_.whose_turn;
   }
 
   bool submissionIs8Giri(const uecda::Hand& hand) const {
