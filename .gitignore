@@ -3,6 +3,7 @@
 *.log
 
 tmp/
+external/FujiGokoroUECda/
 out/*
 test/out/*
 
