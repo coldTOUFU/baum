@@ -88,23 +88,25 @@ int main(int argc, char* argv[]) {
       client.receiveMyCards(dealt_body);
       Cards my_cards = Cards(dealt_body);
       rest_cards -= my_cards;
+      if (my_cards.hasJoker()) {
+        rest_cards.deleteJoker();
+      }
       /* 場の情報を取得 */
       Table table = Table(dealt_body);
 
+      /* 場の手を作る */
+      Hand table_hand = Hand(table_body);
+      rest_cards -= table_hand.getCards();
+      if (table_hand.getSummary().has_joker) {
+        rest_cards.deleteJoker();
+      }
+      if (table.is_start_of_trick) {
+        record.has_passed = table.is_out;
+        table_hand = Hand();
+      }
+
       /* 着手 */
       if (table.is_my_turn) {
-        /* 場の手を作る */
-        Hand table_hand;
-        if (table.is_start_of_trick) {
-          table_hand = Hand();
-        } else {
-          table_hand = Hand(table_body);
-        }
-        rest_cards -= table_hand.getCards();
-        if (table_hand.getSummary().has_joker) {
-          rest_cards.deleteJoker();
-        }
-
         /* プレイヤにカードを分配 */
         std::array<Cards, 5> player_cards;
         simulate_random_dealing(my_playernum, my_cards, player_cards, rest_cards, table);
