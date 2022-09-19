@@ -101,36 +101,39 @@ int main(int argc, char* argv[]) {
         rest_cards.deleteJoker();
       }
       if (table.is_start_of_trick) {
-        record.has_passed = table.is_out;
         table_hand = Hand();
       }
 
+      /* プレイヤにカードを分配 */
+      std::array<Cards, 5> player_cards;
+      simulate_random_dealing(my_playernum, my_cards, player_cards, rest_cards, table);
+
+      /* ゲームの状態の更新 */
+      for (int i = 0; i < 5; i++) {
+        if (table.is_out.at(i) && next_ranks.at(i) == -1) {
+          next_ranks.at(i) = *std::max_element(next_ranks.begin(), next_ranks.end()) + 1;
+        }
+      }
+      last_action = (table_hand == last_table_hand) ? Hand() : table_hand;
+      if (!table.is_start_of_trick && !last_action.getSummary().is_pass) {
+        record.last_submitted_player = last_playernum;
+      }
+      if (table.is_start_of_trick) {
+        record.has_passed = table.is_out;
+      } else {
+        record.has_passed.at(last_playernum) = (last_action.getSummary().is_pass || table.is_out.at(last_playernum));
+      }
+      UECdaState state = {
+        record,
+        table_hand,
+        table,
+        player_cards,
+        next_ranks,
+        last_action
+      };
+
       /* 着手 */
       if (table.is_my_turn) {
-        /* プレイヤにカードを分配 */
-        std::array<Cards, 5> player_cards;
-        simulate_random_dealing(my_playernum, my_cards, player_cards, rest_cards, table);
-
-        /* ゲームの状態の更新 */
-        for (int i = 0; i < 5; i++) {
-          if (table.is_out.at(i) && next_ranks.at(i) == -1) {
-            next_ranks.at(i) = *std::max_element(next_ranks.begin(), next_ranks.end()) + 1;
-          }
-        }
-        last_action = (table_hand == last_table_hand) ? Hand() : table_hand;
-        if (!table.is_start_of_trick) {
-          record.last_submitted_player = last_playernum;
-          record.has_passed.at(last_playernum) = (table_hand.getSummary().is_pass || table.is_out.at(last_playernum));
-        }
-        UECdaState state = {
-          record,
-          table_hand,
-          table,
-          player_cards,
-          next_ranks,
-          last_action
-        };
-
         /* 着手を決める。 */
         MonteCarloTreeNode<UECdaState, Hand> mctnode = MonteCarloTreeNode<UECdaState, Hand>(state, my_playernum);
         Hand submission_hand = mctnode.search();
