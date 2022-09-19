@@ -4,6 +4,8 @@
 *.log
 
 tmp/
+external/tndhm_devkit_c-20180826/
+external/paoon/
 external/FujiGokoroUECda/
 out/main
 test/out/uecda_state_test
