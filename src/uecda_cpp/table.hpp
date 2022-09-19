@@ -76,6 +76,28 @@ namespace uecda {
       os << "  場に何もない？: " << (src.is_start_of_trick ? "YES" : "NO") << std::endl;
       os << "  革命中？: " << (src.is_rev ? "YES" : "NO") << std::endl;
       os << "  縛り中？: " << (src.is_lock ? "YES" : "NO") << std::endl;
+      os << "  各プレイヤの手札枚数: ";
+      for (const auto e: src.card_quantity_of_players) {
+        os << e << " ";
+      }
+      os << std::endl;
+      os << "  上がったプレイヤ: ";
+      for (unsigned int i = 0; i < src.is_out.size(); i++) {
+        if (src.is_out.at(i)) {
+          os << i << " ";
+        }
+      }
+      os << std::endl;
+      os << "  各プレイヤの現階級: ";
+      for (const auto e: src.rank_of_players) {
+        os << e << " ";
+      }
+      os << std::endl;
+      os << "  各席のプレイヤ番号: ";
+      for (const auto e: src.rank_of_players) {
+        os << e << " ";
+      }
+      os << std::endl;
       return os;
     }
   };
