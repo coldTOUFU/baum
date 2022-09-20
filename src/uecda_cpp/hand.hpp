@@ -17,7 +17,7 @@ namespace uecda {
     Hand(): cards_(), joker_(), summary_(Hand::summarize({}, {})) {};
 
     /* 配列形式のカードから手を生成。 */
-    Hand(const uecda::common::CommunicationBody src): cards_(Hand::createCards(src)), joker_(Hand::createJoker(src)), summary_(Hand::summarize(cards_.toBitcards(), joker_.toBitcards())) {};
+    Hand(const uecda::common::CommunicationBody& src): cards_(Hand::createCards(src)), joker_(Hand::createJoker(src)), summary_(Hand::summarize(cards_.toBitcards(), joker_.toBitcards())) {};
 
     /* ビットカードから手を生成。 */
     Hand(const Cards::bitcards src, const Cards::bitcards joker_src, const HandSummary& hs): cards_(Cards(src)), joker_(Cards(joker_src)), summary_(HandSummary(hs)) {};
@@ -57,54 +57,47 @@ namespace uecda {
       std::cout << *this;
     }
 
-    bool operator ==(const Hand &src) const {
+    bool operator ==(const Hand& src) const {
       return cards_ == src.cards_ && joker_ == src.joker_ && summary_ == src.summary_;
     }
 
    private:
-    static constexpr std::array<int, 4> kPairFilterSize = {4, 6, 4, 1};
-    static constexpr std::array<std::array<Cards::bitcards, 6>, 4> kPairFilters = {{
+    static constexpr std::array<int, 4> kPairFilterSize{4, 6, 4, 1};
+    static constexpr std::array<std::array<Cards::bitcards, 6>, 4> kPairFilters{{
       {1, 32768, 1073741824, 35184372088832},                                          /* 1枚用。 */
       {32769, 1073741825, 35184372088833, 1073774592, 35184372121600, 35185445830656}, /* 2枚用。4つから2つ選ぶから6通り。 */
       {1073774593, 35184372121601, 35185445830657, 35185445863424},                    /* 3枚用。4つから3つ選ぶから4通り。 */
-      {35185445863425}                                                                 /* 4枚用。 */
-    }};
-    /* 順に1枚, 2枚, 3枚, 4枚, ..., 14枚の階段用。 */
-    static constexpr std::array<Cards::bitcards, 14> kSequenceFilters = {
-      1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383
-    };
+      {35185445863425}}};                                                              /* 4枚用。 */
+    static constexpr std::array<Cards::bitcards, 14> kSequenceFilters{
+      1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383}; /* 1枚, 2枚, 3枚, 4枚, ..., 14枚の階段用。*/
 
     Cards cards_;
     Cards joker_;
     HandSummary summary_;
 
     /* コンストラクタ用のヘルパーメソッド。配列形式のカードからジョーカー以外の部分のCardsを生成。 */
-    static Cards createCards(const uecda::common::CommunicationBody src);
+    static Cards createCards(const uecda::common::CommunicationBody& src);
 
     /* コンストラクタ用のヘルパーメソッド。配列形式のカードからジョーカーの部分のCardsを生成。 */
-    static Cards createJoker(const uecda::common::CommunicationBody src);
+    static Cards createJoker(const uecda::common::CommunicationBody& src);
 
     /* 与えられたカードを手とみなしてサマリを作る。 */
-    static HandSummary summarize(Cards::bitcards src, Cards::bitcards joker_src);
+    static HandSummary summarize(const Cards::bitcards src, const Cards::bitcards joker_src);
 
     /* ジョーカーなしで与えられた配列に指定された枚数の枚数組を作る。 */
-    static void pushPair(Cards::bitcards src, std::vector<Hand>& hand_vec,
-                         int pair_qty);
+    static void pushPair(const Cards::bitcards src, std::vector<Hand>& hand_vec, const int pair_qty);
 
     /* ジョーカー必ず込みで与えられた配列に指定された枚数の枚数組を作る。 */
-    static void pushPairWithJoker(Cards::bitcards src,
-                                  std::vector<Hand>& hand_vec, int pair_qty);
+    static void pushPairWithJoker(const Cards::bitcards src, std::vector<Hand>& hand_vec, const int pair_qty);
 
     /* ジョーカーなしで与えられた配列に指定された枚数の階段を作る。 */
-    static void pushSequence(Cards::bitcards src, std::vector<Hand>& hand_vec,
-                             int seq_qty);
+    static void pushSequence(const Cards::bitcards src, std::vector<Hand>& hand_vec, int seq_qty);
 
     /* ジョーカー必ず込みで与えられた配列に指定された枚数の階段を作る。 */
-    static void pushSequenceWithJoker(Cards::bitcards src,
-                                      std::vector<Hand>& hand_vec, int seq_qty);
+    static void pushSequenceWithJoker(const Cards::bitcards src, std::vector<Hand>& hand_vec, const int seq_qty);
 
     friend std::ostream& operator<<(std::ostream& os, const Hand& src) {
-      common::CommunicationBody body = {{}};
+      common::CommunicationBody body{};
       src.putCards(body);
       os << src.summary_;
       os << (common::CommunicationBody)body;

@@ -4,21 +4,15 @@ bool uecda::Hand::isLegal(const Table &tbl, const Hand &table_hand) const {
   if (tbl.is_start_of_trick) { return true; }
   if (this->summary_.is_pass) { return true; }
 
-  HandSummary table_hand_summary = table_hand.getSummary();
+  const HandSummary table_hand_summary{table_hand.getSummary()};
 
   /* ジョーカー1枚出しは最強。 */
-  if (this->summary_.quantity == 1 && table_hand_summary.quantity == 1 && this->summary_.has_joker) {
-    return true;
-  }
+  if (this->summary_.quantity == 1 && table_hand_summary.quantity == 1 && this->summary_.has_joker) { return true; }
 
   /* 相手がジョーカー1枚出しなら、スぺ3返し以外はできない。 */
-  Cards::bitcards spade3_filter = (0b010000000000000ULL << 45);
+  constexpr Cards::bitcards spade3_filter{((Cards::bitcards)0b010000000000000 << 45)};
   if (table_hand_summary.quantity == 1 && table_hand_summary.has_joker) {
-    if (this->summary_.quantity == 1 && this->cards_.filterCards(spade3_filter) != 0) {
-      return true;
-    } else {
-      return false;
-    }
+    return this->summary_.quantity == 1 && this->cards_.filterCards(spade3_filter) != (Cards::bitcards)0;
   }
 
   /* 場と同じ種類の手である必要がある。 */
@@ -33,17 +27,16 @@ bool uecda::Hand::isLegal(const Table &tbl, const Hand &table_hand) const {
   if (tbl.is_rev && this->summary_.strongest_order <= table_hand_summary.weakest_order) { return false; }
 
   /* しばりなら、スートが一致する必要がある。 */
-  if (tbl.is_lock) {
-    if (this->summary_.suits != table_hand_summary.suits) { return false; }
-  }
+  if (tbl.is_lock && this->summary_.suits != table_hand_summary.suits) { return false; }
 
   return true;
 }
 
-void uecda::Hand::pushHands(const Cards &src, std::vector<Hand> &hand_vec) {
-  Cards::bitcards src_bit = src.toBitcards();
+void uecda::Hand::pushHands(const Cards &src, std::vector<Hand>& hand_vec) {
+  Cards::bitcards src_bit{src.toBitcards()};
   /* 手探索でフィルターにかけるとき邪魔なので、ジョーカーのビットを落とす。  */
-  src_bit &= 0xfffffffffffffff;
+  src_bit &= (Cards::bitcards)0xfffffffffffffff;
+
 
   for (int pair_qty = 1; pair_qty <= 4; pair_qty++) {
     Hand::pushPair(src_bit, hand_vec, pair_qty);
@@ -55,9 +48,9 @@ void uecda::Hand::pushHands(const Cards &src, std::vector<Hand> &hand_vec) {
   /* ジョーカーがあればジョーカーを用いた役を追加。 */
   if (src.hasJoker()) {
     /* ジョーカー単騎 */
-    Cards::bitcards c = {};
-    Cards::bitcards j = (Cards::bitcards)1;
-    HandSummary hs = Hand::summarize(c, j);
+    const Cards::bitcards c{};
+    const Cards::bitcards j{(Cards::bitcards)1};
+    const HandSummary hs{Hand::summarize(c, j)};
     hand_vec.push_back(Hand(c, j, hs));
 
     for (int pair_qty = 2; pair_qty <= 4; pair_qty++) {
@@ -70,8 +63,8 @@ void uecda::Hand::pushHands(const Cards &src, std::vector<Hand> &hand_vec) {
 }
 
 void uecda::Hand::putCards(uecda::common::CommunicationBody& dst) const {
-  Cards::bitcards src = this->cards_.toBitcards();
-  Cards::bitcards src_joker = this->joker_.toBitcards();
+  Cards::bitcards src{this->cards_.toBitcards()};
+  Cards::bitcards src_joker{this->joker_.toBitcards()};
 
   for (int i = 3; i >= 0; i--) {
     for (int j = 14; j >= 0; j--) {
@@ -87,8 +80,8 @@ void uecda::Hand::putCards(uecda::common::CommunicationBody& dst) const {
   }
 }
 
-uecda::Cards uecda::Hand::createCards(const uecda::common::CommunicationBody src) {
-  Cards::bitcards b = {};
+uecda::Cards uecda::Hand::createCards(const uecda::common::CommunicationBody& src) {
+  Cards::bitcards b{};
 
   for (int suit = 0; suit < 4; suit++) {
     for (int order = 0; order < 15; order++) {
@@ -104,8 +97,8 @@ uecda::Cards uecda::Hand::createCards(const uecda::common::CommunicationBody src
   return Cards(b);
 }
 
-uecda::Cards uecda::Hand::createJoker(const uecda::common::CommunicationBody src) {
-  Cards::bitcards b = {};
+uecda::Cards uecda::Hand::createJoker(const uecda::common::CommunicationBody& src) {
+  Cards::bitcards b{};
 
   for (int suit = 0; suit < 4; suit++) {
     for (int order = 0; order < 15; order++) {
@@ -121,16 +114,17 @@ uecda::Cards uecda::Hand::createJoker(const uecda::common::CommunicationBody src
   return Cards(b);
 }
 
-uecda::HandSummary uecda::Hand::summarize(Cards::bitcards src, Cards::bitcards joker_src) {
-  Cards src_card = Cards(src);
-  Cards joker_src_card = Cards(joker_src);
+uecda::HandSummary uecda::Hand::summarize(const Cards::bitcards src, const Cards::bitcards joker_src) {
+  const Cards src_card{Cards(src)};
+  const Cards joker_src_card{Cards(joker_src)};
 
+  /* パスのサマリ。 */
   if (src_card.quantity() == 0 && joker_src_card.quantity() == 0) {
     return {0, true, 0, 0, 0, 0, 0};
   }
 
-  Cards::bitcards w_ord = std::max(src_card.weakestOrder(), joker_src_card.weakestOrder());
-  /* s_ordについては、カードが空の場合見かけ上その強さが0(最強よりも強い)になるので、カードが空かどうかで場合分けする。 */
+  const Cards::bitcards w_ord{std::max(src_card.weakestOrder(), joker_src_card.weakestOrder())};
+  /* s_ordについては、カードが空の場合見かけ上その強さが0(最強)になってしまうので、カードが空かどうかで場合分けする。 */
   Cards::bitcards s_ord;
   if (src_card.toBitcards() <= 0) {
     s_ord = joker_src_card.strongestOrder();
@@ -140,7 +134,7 @@ uecda::HandSummary uecda::Hand::summarize(Cards::bitcards src, Cards::bitcards j
     s_ord = std::min(src_card.strongestOrder(), joker_src_card.strongestOrder());
   }
 
-  int suits = (src_card.getSuits() | joker_src_card.getSuits());
+  const int suits{(src_card.getSuits() | joker_src_card.getSuits())};
 
   bool is_sequence;
   if (w_ord == s_ord) {
@@ -162,67 +156,67 @@ uecda::HandSummary uecda::Hand::summarize(Cards::bitcards src, Cards::bitcards j
   };
 }
 
-void uecda::Hand::pushPair(Cards::bitcards src, std::vector<Hand> &hand_vec, int pair_qty) {
+void uecda::Hand::pushPair(const Cards::bitcards src, std::vector<Hand> &hand_vec, const int pair_qty) {
   if (pair_qty < 1 || pair_qty > 4) { return; } // フィルターを定義していないseq_qtyが来たら何もしない。
 
   /* 各フィルター(=スートの組み合わせ)に対し、各数字についてペアを探す。 */
   for (int i = 0; i < Hand::kPairFilterSize.at(pair_qty - 1); i++) {
     for (int j = 0; j < 15; j++){
-      Cards::bitcards tmpfilter = (Hand::kPairFilters.at(pair_qty - 1).at(i) << j);
+      const Cards::bitcards tmpfilter{Hand::kPairFilters.at(pair_qty - 1).at(i) << j};
       if ((src & tmpfilter) == tmpfilter) {
-        Cards::bitcards j = {};
-        HandSummary hs = Hand::summarize(tmpfilter, j);
+        const Cards::bitcards j{};
+        const HandSummary hs{Hand::summarize(tmpfilter, j)};
         hand_vec.push_back(Hand(tmpfilter, j, hs));
       }
     }
   }
 }
 
-void uecda::Hand::pushPairWithJoker(Cards::bitcards src, std::vector<Hand> &hand_vec, int pair_qty) {
+void uecda::Hand::pushPairWithJoker(const Cards::bitcards src, std::vector<Hand> &hand_vec, const int pair_qty) {
   if (pair_qty < 1 || pair_qty > 4) { return; } // フィルターを定義していないseq_qtyが来たら何もしない。
 
   for (int i = 0; i < Hand::kPairFilterSize.at(pair_qty - 1); i++) {
     for (int j = 0; j < 15; j++) {
-      Cards::bitcards tmpfilter = (Hand::kPairFilters.at(pair_qty - 1).at(i) << j);
+      const Cards::bitcards tmpfilter{Hand::kPairFilters.at(pair_qty - 1).at(i) << j};
       if (Cards::count(src & tmpfilter) == pair_qty - 1) {
-        Cards::bitcards c = (src & tmpfilter);
-        Cards::bitcards j = (~src & tmpfilter);
-        HandSummary hs = Hand::summarize(c, j);
+        const Cards::bitcards c{src & tmpfilter};
+        const Cards::bitcards j{~src & tmpfilter};
+        const HandSummary hs{Hand::summarize(c, j)};
         hand_vec.push_back(Hand(c, j, hs));
       }
     }
   }
 }
 
-void uecda::Hand::pushSequence(Cards::bitcards src, std::vector<Hand> &hand_vec, int seq_qty) {
+void uecda::Hand::pushSequence(const Cards::bitcards src, std::vector<Hand> &hand_vec, const int seq_qty) {
   if (seq_qty < 3 || seq_qty > 14) { return; } // フィルターを定義していないseq_qtyが来たら何もしない。
 
   /* 各スートに対し、各数字に対して階段を探す。 */
   for(int i = 0; i < 4; i++) {
     for(int j = 0; j <= 15 - seq_qty; j++) {
       /* filterを、i番目のスートでj番目から始めるものに適用できるようシフトする。 */
-      Cards::bitcards tmpfilter = (Hand::kSequenceFilters.at(seq_qty - 1) << (15 * i + j));
+      const Cards::bitcards tmpfilter{Hand::kSequenceFilters.at(seq_qty - 1) << (15 * i + j)};
       if((src & tmpfilter) == tmpfilter) { 
-        Cards::bitcards j = {};
-        HandSummary hs = Hand::summarize(tmpfilter, j);
+        const Cards::bitcards j{};
+        const HandSummary hs{Hand::summarize(tmpfilter, j)};
         hand_vec.push_back(Hand(tmpfilter, j, hs));
       }
     }
   }
 }
 
-void uecda::Hand::pushSequenceWithJoker(Cards::bitcards src, std::vector<Hand> &hand_vec, int seq_qty) {
+void uecda::Hand::pushSequenceWithJoker(const Cards::bitcards src, std::vector<Hand> &hand_vec, const int seq_qty) {
   if (seq_qty < 3 || seq_qty > 14) { return; }
 
   /* 各スートに対し、各数字に対して階段を探す。 */
   for(int i = 0; i < 4; i++) {
     for(int j = 0; j <= 15 - seq_qty; j++) {
       /* filterを、i番目のスートでj番目から始めるものに適用できるようシフトする。 */
-      Cards::bitcards tmpfilter = (Hand::kSequenceFilters.at(seq_qty - 1) << (15 * i + j));
+      const Cards::bitcards tmpfilter{Hand::kSequenceFilters.at(seq_qty - 1) << (15 * i + j)};
       if (Cards::count(src & tmpfilter) == seq_qty - 1) {
-        Cards::bitcards c = (src & tmpfilter);
-        Cards::bitcards j = (~src & tmpfilter);
-        HandSummary hs = Hand::summarize(c, j);
+        const Cards::bitcards c{src & tmpfilter};
+        const Cards::bitcards j{~src & tmpfilter};
+        const HandSummary hs{Hand::summarize(c, j)};
         hand_vec.push_back(Hand(c, j, hs));
       }
     }

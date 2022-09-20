@@ -13,27 +13,27 @@ namespace uecda {
     using bitcards = uint_fast64_t;
 
     /* 整数は、UECda-2007における標準ルール下でのカード表現と対応している。 */
-    static constexpr int kSpade = 0;
-    static constexpr int kHeart = 1;
-    static constexpr int kDiamond = 2;
-    static constexpr int kClover = 3;
+    static constexpr int kSpade{0};
+    static constexpr int kHeart{1};
+    static constexpr int kDiamond{2};
+    static constexpr int kClover{3};
 
     /* カード全体。 */
     static Cards all() {
-      return Cards(0b1'011111111111110'011111111111110'011111111111110'011111111111110);
+      return Cards((bitcards)0b1'011111111111110'011111111111110'011111111111110'011111111111110);
     }
 
     /* 空のカード。 */
-    Cards(): cards_() {}
+    Cards() {}
 
     /* 配列形式のカードから生成。 */
-    Cards(uecda::common::CommunicationBody src);
+    Cards(const uecda::common::CommunicationBody& src);
 
     /* ビットカードから生成。 */
-    Cards(bitcards src) { this->cards_ = src; }
+    Cards(const bitcards src) { this->cards_ = src; }
 
     /* 与えられたビットカードの枚数を返す。 */
-    static int count(bitcards src);
+    static int count(const bitcards src);
 
     /* カードを返す。 */
     bitcards toBitcards() const { return this->cards_; }
@@ -55,8 +55,8 @@ namespace uecda {
 
     /* カードを1つずつに分ける */
     std::vector<Cards> devideIntoOneCards() {
-      bitcards src = this->cards_;
-      bitcards cur = (bitcards)1;
+      bitcards src{this->cards_};
+      bitcards cur{(bitcards)1};
       std::vector<Cards> result{};
     
       /* Joker以外の各札。 */
@@ -84,66 +84,66 @@ namespace uecda {
     void print();
 
     /* 与えられたカードを追加する。 */
-    Cards& operator +=(const Cards &src) {
+    Cards& operator +=(const Cards& src) {
       this->cards_ |= src.cards_;
       return *this;
     }
 
     /* 与えられたカードとの和からなるオブジェクトを返す。 */
-    Cards operator +(const Cards &src) const {
-      Cards dst = *this;
+    Cards operator +(const Cards& src) const {
+      Cards dst{*this};
       dst.cards_ |= src.cards_;
       return dst;
     }
 
     /* 与えられたカードを引く。 */
-    Cards& operator -=(const Cards &src) {
+    Cards& operator -=(const Cards& src) {
       this->cards_ ^= (this->cards_ & src.cards_); 
       return *this;
     }
 
     /* 与えられたカードとの差からなるオブジェクトを返す。 */
-    Cards operator -(const Cards &src) const {
-      Cards dst = *this;
+    Cards operator -(const Cards& src) const {
+      Cards dst{*this};
       dst.cards_ ^= (dst.cards_ & src.cards_); 
       return dst;
     }
 
     /* 等しいか。 */
-    bool operator ==(const Cards &src) const {
+    bool operator ==(const Cards& src) const {
       return this->cards_ == src.cards_;
     }
 
     /* 等しくないか。 */
-    bool operator !=(const Cards &src) const {
+    bool operator !=(const Cards& src) const {
       return !(*this == src);
     }
 
     /* 与えられたカードをすべて含むか。 */
-    bool hasAllOf(Cards c) const {
+    bool hasAllOf(const Cards& c) const {
       return (c - *this).quantity() == 0;
     }
 
     /* 与えられたカードを1枚以上含むか。 */
-    bool hasAnyOf(Cards c) const {
+    bool hasAnyOf(const Cards& c) const {
       return (c.quantity() == 0) || (*this - c) != *this;
     }
 
     /* カードに与えられたフィルターをかけた結果を返す。 */
-    bitcards filterCards(bitcards filter) const {
+    bitcards filterCards(const bitcards filter) const {
       return (this->cards_ & filter);
     }
 
     /* ジョーカーを除く。ジョーカーはワイルドカードでどかしづらいため。 */
     void deleteJoker() {
-      this->cards_ &= 0xfffffffffffffff;
+      this->cards_ &= (bitcards)0xfffffffffffffff;
     }
 
    private:
-    bitcards cards_;
+    bitcards cards_{};
 
     friend std::ostream& operator<<(std::ostream& os, const Cards& src) {
-      common::CommunicationBody tmp = {};
+      common::CommunicationBody tmp{};
       src.putCards(tmp);
 
       os << "-----------------------------------------------------------------------------" << std::endl;

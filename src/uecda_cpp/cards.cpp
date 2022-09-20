@@ -1,6 +1,6 @@
 #include "cards.hpp"
 
-uecda::Cards::Cards(uecda::common::CommunicationBody src) {
+uecda::Cards::Cards(const uecda::common::CommunicationBody& src) {
   this->cards_ = 0;
 
   /* Joker。 */
@@ -24,13 +24,13 @@ uecda::Cards::Cards(uecda::common::CommunicationBody src) {
 }
 
 int uecda::Cards::getSuits() const {
-  bitcards tmp = this->cards_;
-  tmp &= 0xfffffffffffffff; // Jokerをビット列から落とす。
+  bitcards tmp{this->cards_};
+  tmp &= (bitcards)0xfffffffffffffff; // Jokerをビット列から落とす。
 
-  int s = 0;
+  int s{0};
 
   for (int i = 0; i < 4; i++) {
-    bitcards filter = (0xffff >> 1); // 1-15ビット目が1。
+    bitcards filter{(bitcards)0xffff >> 1}; // 1-15ビット目が1。
     filter <<= 15 * (3 - i); // 目的のスートのカードのみフィルタリングできるようにシフトする。
     s += (tmp & filter) != 0;
     s <<= 1;
@@ -43,7 +43,7 @@ int uecda::Cards::quantity() const {
   return this->count(this->cards_);
 }
 
-int uecda::Cards::count(bitcards src) {
+int uecda::Cards::count(const bitcards src) {
   /*
     32bitsの場合の例。
       tmp = 0b10010010100100011001001010110001
@@ -57,7 +57,7 @@ int uecda::Cards::count(bitcards src) {
       01|01|00|01|01|01|00|01|01|01|00|01|01|10|00|01
     のように、2bits区切で1を数えているのがわかる。
   */
-  bitcards tmp = src;
+  bitcards tmp{src};
   tmp = (tmp & 0x5555555555555555) + (tmp >> 1 & 0x5555555555555555);   // 2bits区切でビット数を数える。
   tmp = (tmp & 0x3333333333333333) + (tmp >> 2 & 0x3333333333333333);   // 4bits区切。
   tmp = (tmp & 0x0f0f0f0f0f0f0f0f) + (tmp >> 4 & 0x0f0f0f0f0f0f0f0f);   // 8bits。
@@ -67,8 +67,8 @@ int uecda::Cards::count(bitcards src) {
 }
 
 uecda::Cards::bitcards uecda::Cards::weakestOrder() const {
-  bitcards tmp = this->cards_;
-  tmp &= 0xfffffffffffffff; // Jokerをビット列から落とす。
+  bitcards tmp{this->cards_};
+  tmp &= (bitcards)0xfffffffffffffff; // Jokerをビット列から落とす。
 
   /*
     一番左(弱い)の1がどのスートの位置にあるかわからないので、
@@ -91,8 +91,8 @@ uecda::Cards::bitcards uecda::Cards::weakestOrder() const {
 }
 
 uecda::Cards::bitcards uecda::Cards::strongestOrder() const {
-  bitcards tmp = this->cards_;
-  tmp &= 0xfffffffffffffff; // Jokerをビット列から落とす。
+  bitcards tmp{this->cards_};
+  tmp &= (bitcards)0xfffffffffffffff; // Jokerをビット列から落とす。
 
   /*
     一番右(強い)の1がどのスートの位置にあるかわからないので、
@@ -107,7 +107,7 @@ uecda::Cards::bitcards uecda::Cards::strongestOrder() const {
 }
 
 void uecda::Cards::putCards(uecda::common::CommunicationBody &dst) const {
-  bitcards src = this->cards_;
+  bitcards src{this->cards_};
 
   /* Joker以外の各札。 */
   for (int i = 3; i >= 0; i--) {

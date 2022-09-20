@@ -29,7 +29,7 @@ namespace uecda {
         player_num_on_seats(arg_player_num_on_seats) {}
 
     /* 実戦でのサーバからの通信処理用。 */
-    Table(uecda::common::CommunicationBody src) {
+    Table(uecda::common::CommunicationBody& src) {
       this->is_my_turn = src.at(5).at(2);
       this->whose_turn = src.at(5).at(3);
       this->is_start_of_trick = src.at(5).at(4);
@@ -43,11 +43,11 @@ namespace uecda {
       }
     }
 
-    void print() {
+    void print() const {
       std::cout << *this;
     }
 
-    bool operator ==(const Table &src) const {
+    bool operator ==(const Table& src) const {
       return is_my_turn == src.is_my_turn &&
           whose_turn == src.whose_turn &&
           is_start_of_trick == src.is_start_of_trick &&

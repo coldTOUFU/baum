@@ -43,7 +43,7 @@ void uecda::UECdaClient::receiveMyCards(uecda::common::CommunicationBody& dst) c
   }
 }
 
-void uecda::UECdaClient::sendExchangeCards(uecda::common::CommunicationBody src) const {
+void uecda::UECdaClient::sendExchangeCards(const uecda::common::CommunicationBody& src) const {
   try {
     sendCommunicationBody(src);
   } catch (const SendCommunicationBodyException& e) {
@@ -52,7 +52,7 @@ void uecda::UECdaClient::sendExchangeCards(uecda::common::CommunicationBody src)
   }
 }
 
-bool uecda::UECdaClient::sendSubmissionCards(uecda::common::CommunicationBody src) const {
+bool uecda::UECdaClient::sendSubmissionCards(const uecda::common::CommunicationBody& src) const {
   try {
     sendCommunicationBody(src);
   } catch (const SendCommunicationBodyException& e) {
@@ -100,7 +100,7 @@ void uecda::UECdaClient::receiveTableCards(uecda::common::CommunicationBody& dst
 }
 
 void uecda::UECdaClient::receiveCommunicationBody(uecda::common::CommunicationBody& dst_table) const {
-  uecda::common::CommunicationBody src_table = {};
+  uecda::common::CommunicationBody src_table{};
   if (read(this->sockfd_, &src_table, sizeof(src_table)) <= 0) {
     throw ReceiveCommunicationBodyException();
   }
@@ -114,8 +114,8 @@ void uecda::UECdaClient::receiveCommunicationBody(uecda::common::CommunicationBo
   }
 }
 
-void uecda::UECdaClient::sendCommunicationBody(uecda::common::CommunicationBody src_table) const {
-  uecda::common::CommunicationBody dst_table = {};
+void uecda::UECdaClient::sendCommunicationBody(const uecda::common::CommunicationBody& src_table) const {
+  uecda::common::CommunicationBody dst_table{};
   /* テーブルの要素をホストオーダーから
      ネットワークオーダーに変換した上でコピー。 */
   for (int i = 0; i < 8; i++) {
@@ -129,7 +129,7 @@ void uecda::UECdaClient::sendCommunicationBody(uecda::common::CommunicationBody 
 }
 
 void uecda::UECdaClient::openSocket() {
-  const char* server_addr = this->server_hostname_.c_str();
+  const char* server_addr{this->server_hostname_.c_str()};
 
   /* ソケット生成。 */
   if ((this->sockfd_ = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
@@ -145,8 +145,7 @@ void uecda::UECdaClient::openSocket() {
 
   /* IPアドレスで指定されていないとき、ホスト名の解決を試みる。 */
   if (this->client_addr_.sin_addr.s_addr == 0xffffffff) {
-    struct hostent* host;
-    host = gethostbyname(this->server_hostname_.c_str());
+    struct hostent* host{gethostbyname(this->server_hostname_.c_str())};
     if (host == NULL) {
       std::cerr << "ホスト名解決に失敗しました: " << server_addr << std::endl;
       throw ResolveServerException();
@@ -155,8 +154,7 @@ void uecda::UECdaClient::openSocket() {
   }
 
   /* サーバに接続する。 */
-  if (connect(this->sockfd_, (struct sockaddr*)&(this->client_addr_),
-              sizeof(this->client_addr_)) != 0) {
+  if (connect(this->sockfd_, (struct sockaddr*)&(this->client_addr_), sizeof(this->client_addr_)) != 0) {
     std::cerr << "サーバ接続に失敗しました: " << server_addr << std::endl;
     throw ConnectToServerException();
   }
@@ -164,8 +162,7 @@ void uecda::UECdaClient::openSocket() {
 
 /* クライアントの情報を送信 */
 void uecda::UECdaClient::sendClientProfile() const {
-  uecda::common::CommunicationBody profile = {};
-  profile.at(0).at(0) = UECdaClient::kProtocolVersion;
+  uecda::common::CommunicationBody profile{UECdaClient::kProtocolVersion};
 
   std::copy(this->player_name_.begin(), this->player_name_.end(), profile.at(1).begin());
 
