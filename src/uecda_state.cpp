@@ -1,10 +1,10 @@
 #include "uecda_state.hpp"
 
 UECdaState UECdaState::simulatePass() const {
-  UECdaState result = UECdaState(*this);
+  UECdaState result{*this};
 
   result.record_.has_passed.at(table_.whose_turn) = true;
-  bool has_all_passed = std::all_of(result.record_.has_passed.begin(), result.record_.has_passed.end(), [](const auto& e) { return e; });
+  const bool has_all_passed{std::all_of(result.record_.has_passed.begin(), result.record_.has_passed.end(), [](const auto& e) { return e; })};
 
   /* 全員がパスし終わったら、最後にパスした人(=現状態におけるプレイヤ)からトリック開始。 */
   if (has_all_passed) {
@@ -19,7 +19,7 @@ UECdaState UECdaState::simulatePass() const {
 }
 
 UECdaState UECdaState::simulateSubmission(const uecda::Hand& hand) const {
-  UECdaState result = UECdaState(*this);
+  UECdaState result{*this};
 
   result.table_hand_ = hand;
   result.table_.whose_turn = this->nextPlayerNum();
@@ -29,7 +29,7 @@ UECdaState UECdaState::simulateSubmission(const uecda::Hand& hand) const {
 
   /* 提出者が出したカードを除く。 */
   result.player_cards_.at(table_.whose_turn) -= hand.getCards();
-  if (hand.getJoker() != uecda::Cards()) {
+  if (hand.getSummary().has_joker) {
     result.player_cards_.at(table_.whose_turn).deleteJoker();
   }
   result.table_.card_quantity_of_players.at(table_.whose_turn) -= hand.getSummary().quantity;

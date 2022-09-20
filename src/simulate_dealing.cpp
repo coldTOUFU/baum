@@ -4,7 +4,7 @@ void simulate_random_dealing(const int my_playernum, const uecda::Cards my_cards
   std::random_device seed_gen;
   std::default_random_engine rand_engine(seed_gen());
 
-  std::array<int, 5> rest_quantity_of_not_dealt_cards = table.card_quantity_of_players;
+  std::array<int, 5> rest_quantity_of_not_dealt_cards{table.card_quantity_of_players};
 
   player_cards.fill(uecda::Cards());
   player_cards.at(my_playernum) = my_cards;
@@ -20,7 +20,7 @@ void simulate_random_dealing(const int my_playernum, const uecda::Cards my_cards
     }
 
     std::uniform_int_distribution<int> dist_joker(0, players_able_to_have_joker.size() - 1);
-    int random_playernum = dist_joker(rand_engine);
+    int random_playernum{dist_joker(rand_engine)};
     player_cards.at(random_playernum) += uecda::Cards((uecda::Cards::bitcards)1 << 60);
     rest_quantity_of_not_dealt_cards.at(random_playernum) -= 1;
     rest_cards.deleteJoker();

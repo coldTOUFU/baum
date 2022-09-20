@@ -11,36 +11,35 @@
 
 class UECdaState {
  public:
-  UECdaState(): 
-      record_(),
-      table_hand_(),
-      table_(true, 0, true, false, false, {}, {}, {}, {}),
-      player_cards_(),
-      next_ranks_(),
-      last_action_()
-  {
+  UECdaState()
+      : record_(),
+        table_hand_(),
+        table_(true, 0, true, false, false, {}, {}, {}, {}),
+        player_cards_(),
+        next_ranks_(),
+        last_action_() {
     /* UECdaStateでは、提出処理を常に受け付けたいのでtrueとする。 */
     table_.is_my_turn = true;
   }
 
-  UECdaState(GameRecord record,
-             uecda::Hand table_hand,
-             uecda::Table table,
-             std::array<uecda::Cards, 5> player_cards,
-             std::array<int, 5> next_ranks,
-             uecda::Hand last_action):
-      record_(record),
-      table_hand_(table_hand),
-      table_(table),
-      player_cards_(player_cards),
-      next_ranks_(next_ranks),
-      last_action_(last_action) {
+  UECdaState(GameRecord& record,
+             uecda::Hand& table_hand,
+             uecda::Table& table,
+             std::array<uecda::Cards, 5>& player_cards,
+             std::array<int, 5>& next_ranks,
+             uecda::Hand& last_action)
+      : record_(record),
+        table_hand_(table_hand),
+        table_(table),
+        player_cards_(player_cards),
+        next_ranks_(next_ranks),
+        last_action_(last_action) {
     /* UECdaStateでは、提出処理を常に受け付けたいのでtrueとする。 */
     table_.is_my_turn = true;
   }
 
   /* 受け取った手を適用して得られる状態を返す。 */
-  UECdaState next(uecda::Hand const &hand) const {
+  UECdaState next(const uecda::Hand& hand) const {
     if (hand.getSummary().is_pass || !this->isLegal(hand)) {
       return this->simulatePass();
     } else {
@@ -50,10 +49,10 @@ class UECdaState {
 
   /* 合法手の全体を返す。 */
   std::vector<uecda::Hand> legalActions() const {
-    std::vector<uecda::Hand> dst;
+    std::vector<uecda::Hand> dst{};
     uecda::Hand::pushHands(player_cards_.at(table_.whose_turn), dst);
     const std::vector<uecda::Hand>::iterator& end_of_legal = std::remove_if(dst.begin(), dst.end(),
-        [=](const uecda::Hand& h) { return !h.isLegal(table_, table_hand_); });
+        [this](const uecda::Hand& h) { return !h.isLegal(table_, table_hand_); });
     dst.erase(end_of_legal, dst.end());
     dst.push_back(uecda::Hand()); // パスも合法手。
     return dst;
@@ -109,37 +108,38 @@ class UECdaState {
   std::array<int, 5> next_ranks_;            // 次ゲームでの階級(プレイヤ番号でアクセス)。0で大富豪、4で大貧民。まだ上がっていないなら-1。
   uecda::Hand last_action_;                  // 最後に打たれた手。
 
-  bool isLegal(const uecda::Hand hand) const {
+  bool isLegal(const uecda::Hand& hand) const {
     const uecda::Cards cards_of_cur_player = player_cards_.at(table_.whose_turn);
     return cards_of_cur_player.hasAllOf(hand.getCards()) && hand.isLegal(table_, table_hand_);
   }
 
   int nextPlayerNum() const {
-    auto& num_on_seats = table_.player_num_on_seats;
-    int cur_seat_idx = std::find(num_on_seats.begin(), num_on_seats.end(), table_.whose_turn) - num_on_seats.begin();
+    const auto& num_on_seats{table_.player_num_on_seats};
+    const auto cur_seat_itr = std::find(num_on_seats.begin(), num_on_seats.end(), table_.whose_turn);
+    const int cur_seat_idx{(int)std::distance(num_on_seats.begin(), cur_seat_itr)};
 
     /* 上がっていないプレイヤ内で次のプレイヤを探す。 */
     for (unsigned int i = 0; i < record_.has_passed.size(); i++) {
-      int nextPlayerNum = num_on_seats.at((cur_seat_idx + i + 1) % num_on_seats.size());
-      if (!record_.has_passed.at(nextPlayerNum)) {
-        return nextPlayerNum;
+      const int next_player_num{num_on_seats.at((cur_seat_idx + i + 1) % num_on_seats.size())};
+      if (!record_.has_passed.at(next_player_num)) {
+        return next_player_num;
       }
     }
     return table_.whose_turn;
   }
 
   bool submissionIs8Giri(const uecda::Hand& hand) const {
-    uecda::Cards::bitcards eights = (uecda::Cards::bitcards)9007474141036800;
+    constexpr uecda::Cards::bitcards eights{(uecda::Cards::bitcards)9007474141036800};
     return hand.getWholeBitcards().filterCards(eights) != (uecda::Cards::bitcards)0;
   }
 
   bool submissionIsSpade3Gaeshi(const uecda::Hand& hand) const {
-    uecda::Cards::bitcards spade3 = ((uecda::Cards::bitcards)0b010000000000000 << 45);
-    uecda::HandSummary table_summary = table_hand_.getSummary();
+    constexpr uecda::Cards::bitcards spade3{(uecda::Cards::bitcards)0b010000000000000 << 45};
+    const uecda::HandSummary table_summary{table_hand_.getSummary()};
     return table_summary.has_joker && table_summary.quantity == 1 && hand.getWholeBitcards() == spade3;
   }
 
-  bool submissionCausesLock(const uecda::Hand hand) const {
+  bool submissionCausesLock(const uecda::Hand& hand) const {
     /* ジョーカー1枚出しの場合は縛りでないとする。 */
     if (hand.getSummary().quantity == 1 && hand.getSummary().has_joker) {
       return false;
@@ -147,8 +147,8 @@ class UECdaState {
     return this->last_action_.getSummary().suits == hand.getSummary().suits;
   }
 
-  bool submissionCausesRevolution(const uecda::Hand hand) const {
-    const uecda::HandSummary& summary = hand.getSummary();
+  bool submissionCausesRevolution(const uecda::Hand& hand) const {
+    const uecda::HandSummary summary{hand.getSummary()};
     if (summary.is_sequence) {
       return summary.quantity >= 5;
     } else {
