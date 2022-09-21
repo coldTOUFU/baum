@@ -2,6 +2,7 @@
 #define MONTE_CARLO_TREE_NODE_HPP_
 
 #include <algorithm>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <random>
@@ -15,8 +16,8 @@ class MonteCarloTreeNode {
   /* このクラスをvectorで扱うために必要。 */
   MonteCarloTreeNode() : current_state_(), player_num_() {}
 
-  MonteCarloTreeNode(const GameState& state, const int player_num)
-      : current_state_(state), player_num_(player_num) {}
+  MonteCarloTreeNode(const GameState& state, const int player_num, std::function<GameAction(GameState&)> selectForPlayout = randomAction)
+      : current_state_(state), player_num_(player_num), selectForPlayout_(selectForPlayout) {}
 
   /* 根用。クラスの外側から探索を指示されて最善手を返す。 */
   GameAction search() {
@@ -65,6 +66,7 @@ class MonteCarloTreeNode {
   std::vector<MonteCarloTreeNode> children_{}; // 子節点(あり得る局面の集合)。
   int play_cnt_{};                             // この節点を探索した回数。
   int sum_score_{};                            // この局面を通るプレイアウトで得られた得点の総数。勝1点負0点制なら勝利数と一致する。
+  std::function<GameAction(GameState&)> selectForPlayout_{randomAction}; // ロールアウトポリシー。
 
   /* 節点用。子節点を再帰的に掘り進め、勝利数を逆伝播。 */
   int searchChild(int whole_play_cnt) {
@@ -140,7 +142,7 @@ class MonteCarloTreeNode {
     GameState state{this->current_state_};
 
     while (!state.isFinished()) {
-      state = state.next(MonteCarloTreeNode::randomAction(state));
+      state = state.next(selectForPlayout_(state));
     }
 
     return state.getScore(this->player_num_);
