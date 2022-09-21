@@ -17,6 +17,11 @@
 
 using namespace uecda;
 
+Hand selectAsDefault(const UECdaState& state) {
+  std::vector<uecda::Hand> legal_hands = state.legalActions();
+  return select_hand(legal_hands, state.getTableHand(), state.getTable());
+}
+
 int main(int argc, char* argv[]) {
   bool is_round_end = false;
   bool is_game_end = false;
@@ -135,7 +140,7 @@ int main(int argc, char* argv[]) {
       /* 着手 */
       if (table.is_my_turn) {
         /* 着手を決める。 */
-        MonteCarloTreeNode<UECdaState, Hand> mctnode = MonteCarloTreeNode<UECdaState, Hand>(state, my_playernum);
+        MonteCarloTreeNode<UECdaState, Hand> mctnode = MonteCarloTreeNode<UECdaState, Hand>(state, my_playernum, selectAsDefault);
         Hand submission_hand = mctnode.search();
 
         /* 提出用配列に着手を移す */
