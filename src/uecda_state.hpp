@@ -72,11 +72,6 @@ class UECdaState {
     }
   }
 
-  /* 最後の着手(この盤面に至ったときの着手)を返す。 */
-  uecda::Hand getLastAction() const {
-    return last_action_;
-  }
-
   void print() const {
     std::cout << *this;
   }
@@ -100,17 +95,17 @@ class UECdaState {
         last_action_ == src.last_action_;
   }
 
-  GameRecord getRecord() { return record_; }
+  GameRecord getRecord() const { return record_; }
 
-  uecda::Hand getTableHand() { return table_hand_; }
+  uecda::Hand getTableHand() const { return table_hand_; }
 
-  uecda::Table getTable() { return table_; }
+  uecda::Table getTable() const { return table_; }
 
-  std::array<uecda::Cards, 5> getPlayerCards() { return player_cards_; }
+  std::array<uecda::Cards, 5> getPlayerCards() const { return player_cards_; }
 
-  std::array<int, 5> getNextRanks() { return next_ranks_; }
+  std::array<int, 5> getNextRanks() const { return next_ranks_; }
 
-  uecda::Hand getLastAction() { return last_action_; }
+  uecda::Hand getLastAction() const { return last_action_; }
 
  private:
   GameRecord record_;                        // ゲームの時系列情報。
