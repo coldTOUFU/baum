@@ -100,6 +100,18 @@ class UECdaState {
         last_action_ == src.last_action_;
   }
 
+  GameRecord getRecord() { return record_; }
+
+  uecda::Hand getTableHand() { return table_hand_; }
+
+  uecda::Table getTable() { return table_; }
+
+  std::array<uecda::Cards, 5> getPlayerCards() { return player_cards_; }
+
+  std::array<int, 5> getNextRanks() { return next_ranks_; }
+
+  uecda::Hand getLastAction() { return last_action_; }
+
  private:
   GameRecord record_;                        // ゲームの時系列情報。
   uecda::Hand table_hand_;                   // 場の手。
