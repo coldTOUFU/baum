@@ -1,7 +1,7 @@
 #include "uecda_client.hpp"
 
 const std::string uecda::UECdaClient::kDefaultServerHostname = "127.0.0.1";
-const std::string uecda::UECdaClient::kDefaultPlayerName = "sample";
+const std::string uecda::UECdaClient::kDefaultPlayerName = "baum";
 
 int uecda::UECdaClient::enterGame(void) {
   /* サーバと接続する。 */
