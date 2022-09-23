@@ -49,6 +49,11 @@ namespace uecda {
       return this->cards_ + this->joker_;
     }
 
+    /* 革命を起こせる？ */
+    constexpr bool canRevolute() const {
+      return summary_.is_sequence ? summary_.quantity >= 5 : summary_.quantity >= 4;
+    }
+
     /* 与えられた配列に手の構成カードを置く。 */
     void putCards(uecda::common::CommunicationBody& dst) const;
 
