@@ -1,4 +1,4 @@
-#include "search_winning_variations.hpp"
+#include "search_winning_hand.hpp"
 
 bool someoneHasNCards(const int n, const uecda::Table& table, const GameRecord& record) {
   bool result{};
@@ -11,7 +11,7 @@ bool someoneHasNCards(const int n, const uecda::Table& table, const GameRecord& 
   return result;
 }
 
-bool is_trump(const uecda::Hand& hand, uecda::Table table, const GameRecord& record, const uecda::Hand& table_hand, const uecda::Cards& cards_of_opponents) {
+bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& record, const uecda::Hand& table_hand, const uecda::Cards& cards_of_opponents) {
   if (!hand.isLegal(table, table_hand)) { return false; }
 
   const uecda::HandSummary my_summary{hand.getSummary()};
@@ -74,7 +74,7 @@ bool is_trump(const uecda::Hand& hand, uecda::Table table, const GameRecord& rec
   return true;
 }
 
-uecda::Hand winningHand(const uecda::Cards& my_cards, const uecda::Table& table, const GameRecord& record, const uecda::Hand& table_hand, const uecda::Cards& cards_of_opponents) {
+uecda::Hand searchWinningHand(const uecda::Cards& my_cards, const uecda::Table& table, const GameRecord& record, const uecda::Hand& table_hand, const uecda::Cards& cards_of_opponents) {
   std::vector<uecda::Hand> hands{};
   uecda::Hand::pushHands(my_cards, hands);
   
@@ -88,7 +88,7 @@ uecda::Hand winningHand(const uecda::Cards& my_cards, const uecda::Table& table,
 
   /* 各切札について、それを出した後の必勝手順を探索する。必勝手順であれば空ではない手が返ってくるので、そのときの切札を返せばよい。 */
   for (const uecda::Hand& h : hands) {
-    if (!is_trump(h, table, record, table_hand, cards_of_opponents)) { continue; }
+    if (!isTrump(h, table, record, table_hand, cards_of_opponents)) { continue; }
 
     /* hが革命を起こせる場合、次の探索に反映させるために状態を変える。 */
     uecda::Table next_table{table};
@@ -97,7 +97,7 @@ uecda::Hand winningHand(const uecda::Cards& my_cards, const uecda::Table& table,
     uecda::Cards next_my_cards{my_cards};
     next_my_cards -= h.getCards();
     if (h.getSummary().has_joker) { next_my_cards.deleteJoker(); }
-    if (!winningHand(next_my_cards, next_table, record, {}, cards_of_opponents).getSummary().is_pass) { return h; }
+    if (!searchWinningHand(next_my_cards, next_table, record, {}, cards_of_opponents).getSummary().is_pass) { return h; }
   } 
 
   return {};
