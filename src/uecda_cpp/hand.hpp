@@ -61,6 +61,18 @@ namespace uecda {
       return cards_ == src.cards_ && joker_ == src.joker_ && summary_ == src.summary_;
     }
 
+    /* order1がorder2より強い？ */
+    constexpr static bool isFormerStronger(bool is_rev, Cards::bitcards order1, Cards::bitcards order2) {
+      /* orderは15bit整数で、(革命でない場合)小さいほど強い。 */
+      return (!is_rev && order1 < order2) || (is_rev && order1 > order2);
+    }
+
+    /* order1がorder2より弱い？ */
+    constexpr static bool isFormerWeaker(bool is_rev, Cards::bitcards order1, Cards::bitcards order2) {
+      /* orderは15bit整数で、(革命でない場合)大きいほど弱い。 */
+      return (!is_rev && order1 > order2) || (is_rev && order1 < order2);
+    }
+
    private:
     static constexpr std::array<int, 4> kPairFilterSize{4, 6, 4, 1};
     static constexpr std::array<std::array<Cards::bitcards, 6>, 4> kPairFilters{{
