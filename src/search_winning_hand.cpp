@@ -37,7 +37,6 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
   /* 以下複数枚の場合なので、handが革命を起こせるなら反映させる。 */
   table.is_rev ^= ((!my_summary.is_sequence && my_summary.quantity >= 4) || (my_summary.is_sequence && my_summary.quantity >= 5));
 
-  /* とりあえず、
   /* n(> 1)枚出しの場合。 */
   if (!my_summary.is_sequence) {
     /* 枚数分出せるプレイヤがいなければ、場を流せる。ここは、各々のプレイヤの手札枚数に着目しており、最後の合法手の存在判定とは別に必要。 */
@@ -52,8 +51,8 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
     int n{my_summary.quantity};
 
     /* handに対して出せるカードが存在しない場合は、場を流せる。ここをパスした場合、相手がジョーカーを端に置いて階段が出せることを保証できるので、直下で何も考えずnから1を引ける。 */
-    if ((!table.is_rev && my_summary.strongest_order < (1 << (n - 1))) ||
-        (table.is_rev && my_summary.weakest_order > (1 >> (n - 1)))) { return true; }
+    if ((!table.is_rev && my_summary.strongest_order < ((uecda::Cards::bitcards)1 << (n - 1))) ||
+        (table.is_rev && (my_summary.weakest_order >> (n - 1)) > (uecda::Cards::bitcards)1)) { return true; }
 
     /* 相手がジョーカーを持っていそうなら、ジョーカーを端に置けるので1枚分制約を緩くする。 */
     if (cards_of_opponents.hasJoker()) { n -= 1; }
