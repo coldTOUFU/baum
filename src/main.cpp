@@ -13,6 +13,7 @@
 #include "monte_carlo_tree/monte_carlo_tree_node.hpp"
 #include "game_record.hpp"
 #include "uecda_state.hpp"
+#include "search_winning_hand.hpp"
 #include "simulate_dealing.hpp"
 
 using namespace uecda;
@@ -20,6 +21,27 @@ using namespace uecda;
 Hand selectAsDefault(const UECdaState& state) {
   std::vector<uecda::Hand> legal_hands = state.legalActions();
   return select_hand(legal_hands, state.getTableHand(), state.getTable());
+}
+
+Hand selectHand(const int my_playernum, const UECdaState& state, const Cards& cards_of_opponents) {
+  const GameRecord record{state.getRecord()};
+  const Cards my_cards{state.getPlayerCards().at(my_playernum)};
+  const Table table{state.getTable()};
+  const Hand table_hand{state.getTableHand()};
+
+  /* 自分がパスを出せば上がる状況のとき、パスを出す。 */
+  if (record.last_submitted_player == my_playernum &&
+      std::count_if(record.has_passed.begin(), record.has_passed.end(), [](bool b) { return b; }) == 4) {
+    return {};
+  }
+
+  /* 必勝手探索。 */
+  Hand submission_hand{searchWinningHand(my_cards, table, record, table_hand, cards_of_opponents)};
+  if (!submission_hand.getSummary().is_pass) { return submission_hand; }
+
+  /* 必勝手がなければ、モンテカルロ木探索。 */
+  MonteCarloTreeNode<UECdaState, Hand> mctnode = MonteCarloTreeNode<UECdaState, Hand>(state, my_playernum, selectAsDefault);
+  return mctnode.search();
 }
 
 int main(int argc, char* argv[]) {
@@ -139,9 +161,7 @@ int main(int argc, char* argv[]) {
 
       /* 着手 */
       if (table.is_my_turn) {
-        /* 着手を決める。 */
-        MonteCarloTreeNode<UECdaState, Hand> mctnode = MonteCarloTreeNode<UECdaState, Hand>(state, my_playernum, selectAsDefault);
-        Hand submission_hand = mctnode.search();
+        Hand submission_hand{selectHand(my_playernum, state, rest_cards)};
 
         /* 提出用配列に着手を移す */
         common::CommunicationBody submission_body = {};

@@ -21,10 +21,9 @@ bool uecda::Hand::isLegal(const Table &tbl, const Hand &table_hand) const {
   /* 場のカードと同枚数である必要がある。 */
   if (this->summary_.quantity != table_hand_summary.quantity) { return false; }
 
-  /* 出すカードの最小が場のカードの最大より強い必要がある。 */
-  /* *_ordは15bit整数で、小さいほど強い。第1bitと第15bitはJoker用。 */
-  if (!tbl.is_rev && this->summary_.weakest_order >= table_hand_summary.strongest_order) { return false; }
-  if (tbl.is_rev && this->summary_.strongest_order <= table_hand_summary.weakest_order) { return false; }
+  /* 出すカードの最弱が場のカードの最強より強い必要がある。 */
+  if (!tbl.is_rev && !isFormerStronger(tbl.is_rev, this->summary_.weakest_order, table_hand_summary.strongest_order)) { return false; }
+  if (tbl.is_rev && !isFormerStronger(tbl.is_rev, this->summary_.strongest_order, table_hand_summary.weakest_order)) { return false; }
 
   /* しばりなら、スートが一致する必要がある。 */
   if (tbl.is_lock && this->summary_.suits != table_hand_summary.suits) { return false; }

@@ -49,6 +49,11 @@ namespace uecda {
       return this->cards_ + this->joker_;
     }
 
+    /* 革命を起こせる？ */
+    constexpr bool canRevolute() const {
+      return summary_.is_sequence ? summary_.quantity >= 5 : summary_.quantity >= 4;
+    }
+
     /* 与えられた配列に手の構成カードを置く。 */
     void putCards(uecda::common::CommunicationBody& dst) const;
 
@@ -59,6 +64,18 @@ namespace uecda {
 
     bool operator ==(const Hand& src) const {
       return cards_ == src.cards_ && joker_ == src.joker_ && summary_ == src.summary_;
+    }
+
+    /* order1がorder2より強い？ */
+    constexpr static bool isFormerStronger(bool is_rev, Cards::bitcards order1, Cards::bitcards order2) {
+      /* orderは15bit整数で、(革命でない場合)小さいほど強い。 */
+      return (!is_rev && order1 < order2) || (is_rev && order1 > order2);
+    }
+
+    /* order1がorder2より弱い？ */
+    constexpr static bool isFormerWeaker(bool is_rev, Cards::bitcards order1, Cards::bitcards order2) {
+      /* orderは15bit整数で、(革命でない場合)大きいほど弱い。 */
+      return (!is_rev && order1 > order2) || (is_rev && order1 < order2);
     }
 
    private:
