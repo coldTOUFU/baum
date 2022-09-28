@@ -31,5 +31,8 @@ test: $(TEST_TARGETS)
 $(TEST_OUTDIR)/uecda_state_test:	$(TEST_SRCDIR)/uecda_state_test.cpp $(OBJDIR)/uecda_cpp/hand.o $(OBJDIR)/uecda_cpp/cards.o $(OBJDIR)/uecda_state.o
 	$(CC) $(TEST_CFLAGS) -o $@ $^
 
+$(TEST_OUTDIR)/search_winning_hand_test:	$(TEST_SRCDIR)/search_winning_hand_test.cpp $(OBJDIR)/uecda_cpp/hand.o $(OBJDIR)/uecda_cpp/cards.o $(OBJDIR)/uecda_state.o $(OBJDIR)/search_winning_hand.o
+	$(CC) $(TEST_CFLAGS) -o $@ $^
+
 clean:
 	rm -f ./out/main ./out/obj/**/*.o ./out/obj/*.o ./test/out/uecda_state_test
