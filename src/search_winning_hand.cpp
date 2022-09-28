@@ -28,7 +28,7 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
     /* 相手がジョーカーを持っていたら場を流せない。 */
     if (cards_of_opponents.hasJoker()) { return false; }
 
-    /* 相手の最強のカード以上の強さなら、またそのときに限り、場を流せる。 */
+    /* 相手の最強のカード以上の強さなら、またそのときに限り、場を流せる。1枚出しなので、革命時にweakest_orderで比較する必要はない。 */
     return !uecda::Hand::isFormerWeaker(table.is_rev, my_summary.strongest_order, cards_of_opponents.strongestOrder());
   }
 
@@ -43,7 +43,8 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
     if (!anyOpponentsHaveNCards(my_summary.quantity, table, record)) { return true; }
 
     /* 相手の最強のカード以上の強さなら、場を流せる。なくてもいいけど、相手の手札群から手を生成して合法判定するのはコストがかかるのでここで引っ掛けて時間節約したいなという気持ち。 */
-    if (!uecda::Hand::isFormerWeaker(table.is_rev, my_summary.strongest_order, cards_of_opponents.strongestOrder())) { return true; }
+    if ((!table.is_rev && !uecda::Hand::isFormerWeaker(table.is_rev, my_summary.strongest_order, cards_of_opponents.strongestOrder())) ||
+        (table.is_rev && !uecda::Hand::isFormerWeaker(table.is_rev, my_summary.weakest_order, cards_of_opponents.weakestOrder()))) { return true; }
   } else { /* 階段の場合。 */
     /* 枚数分出せるプレイヤがいなければ、場を流せる。 */
     if (!anyOpponentsHaveNCards(my_summary.quantity, table, record)) { return true; }
