@@ -449,16 +449,16 @@ TEST_F(IsTrumpTest, WeakSequence) {
 TEST_F(IsTrumpTest, WeakSequenceOnRevolution) {
   src_card_quantity_of_players_ = {3, 3, 1, 1, 1};
   src_player_cards_ = {
+    Cards(Cards::S9 | Cards::S10 | Cards::S11),
     Cards(Cards::S6 | Cards::S7 | Cards::S8),
-    Cards(Cards::S3 | Cards::S4 | Cards::S5),
-    Cards(Cards::S9),
-    Cards(Cards::H9),
-    Cards(Cards::D9)};
-  src_cards_of_opponents_ = Cards(Cards::S3 | Cards::S4 | Cards::S5 | Cards::S9 | Cards::H9 | Cards::D9);
+    Cards(Cards::S3),
+    Cards(Cards::H3),
+    Cards(Cards::D3)};
+  src_cards_of_opponents_ = Cards(Cards::S6 | Cards::S7 | Cards::S8 | Cards::S3 | Cards::H3 | Cards::D3);
   src_is_rev_ = true;
   updateSrcState();
 
-  Hand hand(Cards::S6 | Cards::S7 | Cards::S8, {});
+  Hand hand(Cards::S9 | Cards::S10 | Cards::S11, {});
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -509,7 +509,7 @@ TEST_F(IsTrumpTest, RevolutingWeakPair) {
   updateSrcState();
 
   Hand hand(Cards::S4 | Cards::H4 | Cards::D4 | Cards::C4, {});
-  EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
+  EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
 /* 一手詰め。 */
