@@ -8,7 +8,7 @@
 #include "uecda_cpp/hand_summary.hpp"
 #include "game_record.hpp"
 
-bool someoneHasNCards(const int n, const uecda::Table& table, const GameRecord& record);
+bool anyOpponentsHaveNCards(const int n, const uecda::Table& table, const GameRecord& record);
 
 /* trump(切札: 確実に場を流せる)か？ */
 bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& record, const uecda::Hand& table_hand, const uecda::Cards& cards_of_opponents);

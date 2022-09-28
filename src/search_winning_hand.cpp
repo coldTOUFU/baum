@@ -1,14 +1,12 @@
 #include "search_winning_hand.hpp"
 
-bool someoneHasNCards(const int n, const uecda::Table& table, const GameRecord& record) {
-  bool result{};
+bool anyOpponentsHaveNCards(const int n, const uecda::Table& table, const GameRecord& record) {
   for (unsigned int i = 0; i < table.card_quantity_of_players.size(); i++) {
-    if (!record.has_passed.at(i) && table.card_quantity_of_players.at(i) >= n) {
-      result = true;
-      break;
+    if (i != (unsigned int)table.whose_turn && !record.has_passed.at(i) && table.card_quantity_of_players.at(i) >= n) {
+      return true;
     }
   }
-  return result;
+  return false;
 }
 
 bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& record, const uecda::Hand& table_hand, const uecda::Cards& cards_of_opponents) {
@@ -40,13 +38,13 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
   /* n(> 1)枚出しの場合。 */
   if (!my_summary.is_sequence) {
     /* 枚数分出せるプレイヤがいなければ、場を流せる。ここは、各々のプレイヤの手札枚数に着目しており、最後の合法手の存在判定とは別に必要。 */
-    if (!someoneHasNCards(my_summary.quantity, table, record)) { return true; }
+    if (!anyOpponentsHaveNCards(my_summary.quantity, table, record)) { return true; }
 
     /* 相手の最強のカード以上の強さなら、場を流せる。なくてもいいけど、相手の手札群から手を生成して合法判定するのはコストがかかるのでここで引っ掛けて時間節約したいなという気持ち。 */
     if (!uecda::Hand::isFormerWeaker(table.is_rev, my_summary.strongest_order, cards_of_opponents.strongestOrder())) { return true; }
   } else { /* 階段の場合。 */
     /* 枚数分出せるプレイヤがいなければ、場を流せる。 */
-    if (!someoneHasNCards(my_summary.quantity, table, record)) { return true; }
+    if (!anyOpponentsHaveNCards(my_summary.quantity, table, record)) { return true; }
 
     int n{my_summary.quantity};
 
