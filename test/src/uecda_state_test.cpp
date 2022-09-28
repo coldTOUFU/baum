@@ -109,7 +109,7 @@ class NextTest: public UECdaStateTest {
     src_rank_of_players_ = {0, 1, 2, 3, 4};
     src_player_num_on_seats_ = {0, 1, 2, 3, 4};
     src_record_ = {4, {}};
-    src_table_hand_ = Hand({0, 1});
+    src_table_hand_ = Hand((common::CommunicationBody){0, 1});
     src_player_cards_ = {
       Cards({{{}, {0, 1, 1}}}),
       Cards({0, 0, 0, 1}),
@@ -182,7 +182,7 @@ class IsFinishedTest: public UECdaStateTest {
     src_rank_of_players_ = {0, 1, 2, 3, 4};
     src_player_num_on_seats_ = {0, 1, 2, 3, 4};
     src_record_ = {4, {}};
-    src_table_hand_ = Hand({0, 1});
+    src_table_hand_ = Hand((common::CommunicationBody){0, 1});
     src_player_cards_ = {
       Cards({{{}, {0, 0, 0, 1}}}),
       Cards({0, 0, 0, 0, 1}),
@@ -208,7 +208,7 @@ class GetScoreTest: public UECdaStateTest {
     src_rank_of_players_ = {0, 1, 2, 3, 4};
     src_player_num_on_seats_ = {0, 1, 2, 3, 4};
     src_record_ = {4, {true, true, true, true, true}};
-    src_table_hand_ = Hand({0, 1});
+    src_table_hand_ = Hand((common::CommunicationBody){0, 1});
     src_player_cards_ = {};
     src_next_ranks_ = {0, 1, 2, 3, 4};
     src_last_action_ = src_table_hand_;
@@ -228,7 +228,7 @@ class GetLastActionTest: public UECdaStateTest {
     src_rank_of_players_ = {0, 1, 2, 3, 4};
     src_player_num_on_seats_ = {0, 1, 2, 3, 4};
     src_record_ = {4, {}};
-    src_table_hand_ = Hand({0, 1});
+    src_table_hand_ = Hand((common::CommunicationBody){0, 1});
     src_player_cards_ = {
       Cards({{{}, {0, 1, 1}}}),
       Cards({0, 0, 0, 1}),
@@ -464,7 +464,7 @@ TEST_F(NextTest, SubmissionSpade3GaeshiSingle) {
   dst_player_num_ = src_player_num_;
   dst_is_start_of_trick_ = true;
   dst_table_hand_ = Hand();
-  dst_last_action_ = Hand({0, 1});
+  dst_last_action_ = Hand((common::CommunicationBody){0, 1});
   updateDstState();
 
   Hand next_action = dst_last_action_;
@@ -558,5 +558,5 @@ TEST_F(GetScoreTest, Undetermined) {
 }
 
 TEST_F(GetLastActionTest, Normal) {
-  EXPECT_EQ(src_state_.getLastAction(), Hand({0, 1}));
+  EXPECT_EQ(src_state_.getLastAction(), Hand((common::CommunicationBody){0, 1}));
 }
