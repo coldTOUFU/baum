@@ -32,8 +32,10 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
     return !uecda::Hand::isFormerWeaker(table.is_rev, my_summary.strongest_order, cards_of_opponents.strongestOrder());
   }
 
-  /* 以下複数枚の場合なので、handが革命を起こせるなら反映させる。 */
+  /* 以下でhandを出した後の合法手について考えるので、tableを更新する。 */
   table.is_rev ^= ((!my_summary.is_sequence && my_summary.quantity >= 4) || (my_summary.is_sequence && my_summary.quantity >= 5));
+  table.is_start_of_trick = false;
+  table.is_lock = hand.getSummary().suits == table_hand.getSummary().suits;
 
   /* n(> 1)枚出しの場合。 */
   if (!my_summary.is_sequence) {
