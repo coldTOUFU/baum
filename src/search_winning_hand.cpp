@@ -51,10 +51,6 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
 
     int n{my_summary.quantity};
 
-    /* handに対して出せるカードが存在しない場合は、場を流せる。ここをパスした場合、相手がジョーカーを端に置いて階段が出せることを保証できるので、直下で何も考えずnから1を引ける。 */
-    if ((!table.is_rev && my_summary.strongest_order < ((uecda::Cards::bitcards)1 << (n - 1))) ||
-        (table.is_rev && (my_summary.weakest_order >> (n - 1)) > (uecda::Cards::bitcards)1)) { return true; }
-
     /* 相手がジョーカーを持っていそうなら、ジョーカーを端に置けるので1枚分制約を緩くする。 */
     if (cards_of_opponents.hasJoker()) { n -= 1; }
 
