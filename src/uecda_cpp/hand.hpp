@@ -20,7 +20,7 @@ namespace uecda {
     Hand(const uecda::common::CommunicationBody& src): cards_(Hand::createCards(src)), joker_(Hand::createJoker(src)), summary_(Hand::summarize(cards_.toBitcards(), joker_.toBitcards())) {};
 
     /* ビットカードから手を生成。 */
-    Hand(const Cards::bitcards src, const Cards::bitcards joker_src, const HandSummary& hs): cards_(Cards(src)), joker_(Cards(joker_src)), summary_(HandSummary(hs)) {};
+    Hand(const Cards::bitcards src, const Cards::bitcards joker_src): cards_(Cards(src)), joker_(Cards(joker_src)), summary_(summarize(src, joker_src)) {};
 
     /* コピー。 */
     Hand(const uecda::Hand& src): cards_(src.cards_), joker_(src.joker_), summary_(src.summary_) {};
