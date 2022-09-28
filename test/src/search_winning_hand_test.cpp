@@ -165,7 +165,7 @@ TEST_F(IsTrumpTest, StrongestSingle) {
   src_cards_of_opponents_ = Cards(Cards::S3 | Cards::H3 | Cards::D3 | Cards::C3);
   updateSrcState();
 
-  Hand hand{Cards::H4, {}};
+  Hand hand{Cards::S4, {}};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -204,7 +204,7 @@ TEST_F(IsTrumpTest, SameStrongPair) {
   src_cards_of_opponents_ = Cards(Cards::D2 | Cards::C2 | Cards::S3 | Cards::H3 | Cards::D3);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::H3, {});
+  Hand hand(Cards::S2 | Cards::H2, {});
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -270,23 +270,23 @@ TEST_F(IsTrumpTest, LargeSequence) {
     Cards(Cards::H6),
     Cards(Cards::D6),
     Cards(Cards::C6)};
-  src_cards_of_opponents_ = Cards(Cards::S4 | Cards::H4 | Cards::D4 | Cards::C4);
+  src_cards_of_opponents_ = Cards(Cards::S6 | Cards::H6 | Cards::D6 | Cards::C6);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::H3 | Cards::D3, {});
+  Hand hand(Cards::S3 | Cards::S4 | Cards::S5, {});
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
 /* 階段の最強カードと相手の最強カードの距離的にどの相手も階段を返せない場合。 */
-TEST_F(IsTrumpTest, StrongSequence) {
+TEST_F(IsTrumpTest, StrongestSequence) {
   src_card_quantity_of_players_ = {3, 3, 1, 1, 1};
   src_player_cards_ = {
     Cards(Cards::S3 | Cards::S4 | Cards::S5),
     Cards(Cards::H3 | Cards::H4 | Cards::H5),
     Cards(Cards::S7),
-    Cards(Cards::D7),
-    Cards(Cards::C7)};
-  src_cards_of_opponents_ = Cards(Cards::H3 | Cards::H4 | Cards::H5 | Cards::S7 | Cards::D7 | Cards::C7);
+    Cards(Cards::H7),
+    Cards(Cards::D7)};
+  src_cards_of_opponents_ = Cards(Cards::H3 | Cards::H4 | Cards::H5 | Cards::S7 | Cards::H7 | Cards::D7);
   updateSrcState();
 
   Hand hand(Cards::S3 | Cards::S4 | Cards::S5, {});
@@ -294,15 +294,15 @@ TEST_F(IsTrumpTest, StrongSequence) {
 }
 
 /* 階段の最強カードと相手の最強カードの距離的にどの相手も階段を返せない場合(革命時)。 */
-TEST_F(IsTrumpTest, StrongSequenceOnRevolution) {
+TEST_F(IsTrumpTest, StrongestSequenceOnRevolution) {
   src_card_quantity_of_players_ = {3, 3, 1, 1, 1};
   src_player_cards_ = {
     Cards(Cards::S3 | Cards::S4 | Cards::S5),
     Cards(Cards::H3 | Cards::H4 | Cards::H5),
     Cards(Cards::S7),
-    Cards(Cards::D7),
-    Cards(Cards::C7)};
-  src_cards_of_opponents_ = Cards(Cards::H3 | Cards::H4 | Cards::H5 | Cards::S7 | Cards::D7 | Cards::C7);
+    Cards(Cards::H7),
+    Cards(Cards::D7)};
+  src_cards_of_opponents_ = Cards(Cards::H3 | Cards::H4 | Cards::H5 | Cards::S7 | Cards::H7 | Cards::D7);
   updateSrcState();
 
   Hand hand(Cards::S3 | Cards::S4 | Cards::S5, {});
@@ -367,10 +367,10 @@ TEST_F(IsTrumpTest, SequenceOnRevolutionLastBranch) {
     Cards(Cards::S12 | Cards::S1 | Cards::S2),
     Cards(Cards::H12 | Cards::H1 | Cards::H2),
     Cards(Cards::S3),
-    Cards(Cards::D3),
-    Cards(Cards::C3)};
+    Cards(Cards::H3),
+    Cards(Cards::D3)};
   src_is_rev_ = true;
-  src_cards_of_opponents_ = Cards(Cards::H12 | Cards::H1 | Cards::H2 | Cards::S3 | Cards::D3 | Cards::C3);
+  src_cards_of_opponents_ = Cards(Cards::H12 | Cards::H1 | Cards::H2 | Cards::S3 | Cards::H3 | Cards::D3);
   updateSrcState();
 
   Hand hand(Cards::S12 | Cards::S1 | Cards::S2, {});
@@ -479,7 +479,7 @@ TEST_F(IsTrumpTest, WeakSequenceWithJoker) {
 }
 
 /* 革命を起こし、起こした後最強になるペア。 */
-TEST_F(IsTrumpTest, RevolutingStrongPair) {
+TEST_F(IsTrumpTest, RevolutingStrongestPair) {
   src_card_quantity_of_players_ = {4, 4, 1, 1, 1};
   src_player_cards_ = {
     Cards(Cards::S3 | Cards::H3 | Cards::D3 | Cards::C3),
@@ -521,8 +521,9 @@ TEST_F(SearchWinningHandTest, OneMoveToWin) {
 /* 二手詰め。 */
 TEST_F(SearchWinningHandTest, TwoMoveToWin) {
   src_my_cards_ = {Cards::S3 | Cards::S2};
-  src_player_cards_ = {src_my_cards_, Cards::S1, Cards::H1, Cards::D1, Cards::C1};
   src_card_quantity_of_players_ = {2, 1, 1, 1, 1};
+  src_player_cards_ = {src_my_cards_, Cards::S1, Cards::H1, Cards::D1, Cards::C1};
+  src_cards_of_opponents_ = Cards(Cards::S1 | Cards::H1 | Cards::D1 | Cards::C1);
   Hand dst_hand{Cards::S2, {}};
   EXPECT_EQ(searchWinningHand(src_my_cards_, src_table_, src_record_, src_table_hand_, src_cards_of_opponents_), dst_hand);
 }
@@ -530,10 +531,11 @@ TEST_F(SearchWinningHandTest, TwoMoveToWin) {
 /* 二手詰め(場にカードがある場合)。 */
 TEST_F(SearchWinningHandTest, TwoMoveToWinOnTableHand) {
   src_my_cards_ = {Cards::S3 | Cards::S2};
+  src_card_quantity_of_players_ = {2, 1, 1, 1, 1};
   src_player_cards_ = {src_my_cards_, Cards::S1, Cards::H1, Cards::D1, Cards::C1};
+  src_cards_of_opponents_ = Cards(Cards::S1 | Cards::H1 | Cards::D1 | Cards::C1);
   src_table_hand_ = Hand(Cards::S12, {});
   src_is_start_of_trick_ = false;
-  src_card_quantity_of_players_ = {2, 1, 1, 1, 1};
   Hand dst_hand{Cards::S2, {}};
   EXPECT_EQ(searchWinningHand(src_my_cards_, src_table_, src_record_, src_table_hand_, src_cards_of_opponents_), dst_hand);
 }
@@ -541,6 +543,8 @@ TEST_F(SearchWinningHandTest, TwoMoveToWinOnTableHand) {
 /* 必勝手がない場合。 */
 TEST_F(SearchWinningHandTest, NoMoveToWin) {
   src_my_cards_ = {Cards::S3 | Cards::S4};
+  src_card_quantity_of_players_ = {2, 1, 1, 1, 1};
+  src_player_cards_.at(0) = src_my_cards_;
   Hand dst_hand{};
   EXPECT_EQ(searchWinningHand(src_my_cards_, src_table_, src_record_, src_table_hand_, src_cards_of_opponents_), dst_hand);
 }
