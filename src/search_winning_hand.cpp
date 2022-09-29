@@ -16,12 +16,11 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
   const uecda::HandSummary table_summary{table_hand.getSummary()};
 
   /* 8切は問答無用で場を流す。 */
-  constexpr uecda::Cards::bitcards eights{(uecda::Cards::bitcards)9007474141036800};
+  constexpr uecda::Cards::bitcards eights{uecda::Cards::S8 | uecda::Cards::H8 | uecda::Cards::D8 | uecda::Cards::C8};
   if (hand.getWholeBitcards().filterCards(eights) != (uecda::Cards::bitcards)0) { return true; }
 
   /* スぺ3返しは問答無用で場を流す。 */
-  constexpr uecda::Cards::bitcards spade3{(uecda::Cards::bitcards)0b010000000000000 << 45};
-  if (table_summary.has_joker && table_summary.quantity == 1 && hand.getWholeBitcards() == spade3) { return true; }
+  if (table_summary.has_joker && table_summary.quantity == 1 && hand.getWholeBitcards() == uecda::Cards::S3) { return true; }
 
   /* 1枚出しの場合。 */
   if (my_summary.quantity == 1) {
