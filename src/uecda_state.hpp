@@ -95,6 +95,8 @@ class UECdaState {
         last_action_ == src.last_action_;
   }
 
+  int getMyPlayerNum() const { return table_.whose_turn; }
+
   GameRecord getRecord() const { return record_; }
 
   uecda::Hand getTableHand() const { return table_hand_; }
