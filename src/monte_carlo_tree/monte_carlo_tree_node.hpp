@@ -10,7 +10,7 @@
 
 /* GameState: GameStateクラスを実装した型。 */
 /* GameAction: ゲームの着手を表現する型。 */
-template <class GameState, typename GameAction>
+template <class GameState, typename GameAction, int kNumberOfPlayers>
 class MonteCarloTreeNode {
  public:
   /* このクラスをvectorで扱うために必要。 */
@@ -39,12 +39,17 @@ class MonteCarloTreeNode {
 
     /* [デバッグ] 各子節点の状態と評価値を出力する。 */
     if (MonteCarloTreeNode::kIsDebugMode) {
-      for (const MonteCarloTreeNode<GameState, GameAction>& child : this->children_) {
+      for (const MonteCarloTreeNode<GameState, GameAction, kNumberOfPlayers>& child : this->children_) {
         std::cout << "********************" << std::endl;
+        std::cout << "プレイヤ番号: " << player_num_ << std::endl;
         std::cout << "総プレイアウト回数: " << whole_play_cnt << std::endl;
         std::cout << "節点の通過回数: " << child.play_cnt_ << std::endl;
-        std::cout << "得点和: " << child.sum_score_ << std::endl;
-        std::cout << "勝率: " << child.meanScore() << std::endl;
+        std::cout << "得点和: ";
+        for (const int s : sum_scores_) {
+          std::cout << s << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "勝率: " << child.meanScore(player_num_) << std::endl;
         std::cout << "********************" << std::endl;
         child.current_state_.print();
         std::cout << "********************" << std::endl;
@@ -65,17 +70,21 @@ class MonteCarloTreeNode {
   int player_num_;                       // 自分のプレイヤ番号。
   std::vector<MonteCarloTreeNode> children_{}; // 子節点(あり得る局面の集合)。
   int play_cnt_{};                             // この節点を探索した回数。
-  int sum_score_{};                            // この局面を通るプレイアウトで得られた得点の総数。勝1点負0点制なら勝利数と一致する。
+  std::array<int, kNumberOfPlayers> sum_scores_{}; // この局面を通るプレイアウトで得られた各プレイヤの総得点。勝1点負0点制なら勝利数と一致する。
   std::function<GameAction(GameState&)> selectForPlayout_{randomAction}; // ロールアウトポリシー。
 
-  /* 節点用。子節点を再帰的に掘り進め、勝利数を逆伝播。 */
-  int searchChild(int whole_play_cnt) {
+  /* 節点用。子節点を再帰的に掘り進め、各プレイヤの得点を逆伝播。 */
+  std::array<int, kNumberOfPlayers> searchChild(int whole_play_cnt) {
     this->play_cnt_++;
 
     /* 既に勝敗がついていたら、結果を返す。 */
     if (this->current_state_.isFinished()) {
-      this->sum_score_ += this->current_state_.getScore(this->player_num_);
-      return this->current_state_.getScore(this->player_num_);
+      std::array<int, kNumberOfPlayers> result{};
+      for (int i = 0; i < kNumberOfPlayers; i++) {
+        result.at(i) = this->current_state_.getScore(i);
+        sum_scores_.at(i) += result.at(i);
+      }
+      return result;
     }
 
     /* 子供がおらず、十分この節点を探索した場合は、展開する。 */
@@ -86,20 +95,24 @@ class MonteCarloTreeNode {
 
     /* 子供がいる場合は、選択して掘り進める。 */
     if (this->children_.size() > 0) {
-      MonteCarloTreeNode<GameState, GameAction>& child{this->selectChildToSearch(whole_play_cnt)};
-      int result{child.searchChild(whole_play_cnt)};
-      this->sum_score_ += result;
+      MonteCarloTreeNode<GameState, GameAction, kNumberOfPlayers>& child{this->selectChildToSearch(whole_play_cnt)};
+      std::array<int, kNumberOfPlayers> result{child.searchChild(whole_play_cnt)};
+      for (int i = 0; i < kNumberOfPlayers; i++) {
+        sum_scores_.at(i) += result.at(i);
+      }
       return result;
     }
 
     /* 子供がいない場合は、プレイアウトの結果を返す。 */
-    int result{this->playout()};
-    this->sum_score_ += result;
+    std::array<int, kNumberOfPlayers> result{this->playout()};
+    for (int i = 0; i < kNumberOfPlayers; i++) {
+      sum_scores_.at(i) += result.at(i);
+    }
     return result;
   }
 
   /* 子節点中で最も評価値の高いものを返す。 */
-  MonteCarloTreeNode<GameState, GameAction>& selectChildToSearch(int whole_play_cnt) {
+  MonteCarloTreeNode<GameState, GameAction, kNumberOfPlayers>& selectChildToSearch(int whole_play_cnt) {
     if (this->children_.size() <= 0) {
       std::cerr << "子節点がありません。" << std::endl;
       std::terminate();
@@ -107,13 +120,13 @@ class MonteCarloTreeNode {
 
     return *std::max_element(
         this->children_.begin(), this->children_.end(),
-        [whole_play_cnt](const MonteCarloTreeNode& a, const MonteCarloTreeNode& b) {
-          return a.evaluate(whole_play_cnt) < b.evaluate(whole_play_cnt);
+        [whole_play_cnt, this](const MonteCarloTreeNode& a, const MonteCarloTreeNode& b) {
+          return a.evaluate(whole_play_cnt, player_num_) < b.evaluate(whole_play_cnt, player_num_);
         });
   }
 
   /* 子節点中で最も勝率の高いものを返す。 */
-  MonteCarloTreeNode<GameState, GameAction>& selectChildWithBestMeanScore() {
+  MonteCarloTreeNode<GameState, GameAction, kNumberOfPlayers>& selectChildWithBestMeanScore() {
     if (this->children_.size() <= 0) {
       std::cerr << "子節点がありません。" << std::endl;
       std::terminate();
@@ -121,8 +134,8 @@ class MonteCarloTreeNode {
 
     return *std::max_element(
         this->children_.begin(), this->children_.end(),
-        [](const MonteCarloTreeNode& a, const MonteCarloTreeNode& b) {
-          return a.meanScore() < b.meanScore();
+        [this](const MonteCarloTreeNode& a, const MonteCarloTreeNode& b) {
+          return a.meanScore(player_num_) < b.meanScore(player_num_);
         });
   }
 
@@ -133,29 +146,34 @@ class MonteCarloTreeNode {
     std::transform(actions.begin(), actions.end(), this->children_.begin(),
         [&](auto action) {
           GameState state{GameState(this->current_state_).next(action)};
-          return MonteCarloTreeNode(state, this->player_num_);
+          return MonteCarloTreeNode(state, state.getMyPlayerNum());
         });
   }
 
   /* プレイアウトを実施し、結果を返す。 */
-  int playout() {
+  std::array<int, kNumberOfPlayers> playout() {
     GameState state{this->current_state_};
 
     while (!state.isFinished()) {
       state = state.next(selectForPlayout_(state));
     }
 
-    return state.getScore(this->player_num_);
+    std::array<int, kNumberOfPlayers> result{};
+    for (int i = 0; i < kNumberOfPlayers; i++) {
+      result.at(i) = state.getScore(i);
+    }
+
+    return result;
   }
 
-  /* なんらかの方法で現在局面の評価値を計算して返す。 */
-  double evaluate(int whole_play_cnt) const {
-    return MonteCarloTreeNode::ucb1(whole_play_cnt, this->play_cnt_, this->sum_score_);
+  /* なんらかの方法でplayer_num目線での現在局面の評価値を計算して返す。 */
+  double evaluate(int whole_play_cnt, int player_num) const {
+    return MonteCarloTreeNode::ucb1(whole_play_cnt, this->play_cnt_, this->sum_scores_.at(player_num));
   }
 
-  /* 現在局面の平均得点を返す。勝ち点1負け点0のゲームなら勝率。 */
-  double meanScore() const {
-    return (double)this->sum_score_ / this->play_cnt_;
+  /* player_num目線での現在局面の平均得点を返す。勝ち点1負け点0のゲームなら勝率。 */
+  double meanScore(int player_num) const {
+    return (double)this->sum_scores_.at(player_num) / this->play_cnt_;
   }
 
   /* ucb1値を返す。 */
