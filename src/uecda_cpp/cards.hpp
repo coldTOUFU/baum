@@ -71,6 +71,10 @@ namespace uecda {
     static constexpr bitcards C13{(bitcards)0b000000000001000};
     static constexpr bitcards C1 {(bitcards)0b000000000000100};
     static constexpr bitcards C2 {(bitcards)0b000000000000010};
+    static constexpr bitcards kSpadeCards {S3 | S4 | S5 | S6 | S7 | S8 | S9 | S10 | S11 | S12 | S1 | S2 };
+    static constexpr bitcards kHeartCards {H3 | H4 | H5 | H6 | H7 | H8 | H9 | H10 | H11 | H12 | H1 | H2 };
+    static constexpr bitcards kDiamondCards {D3 | D4 | D5 | D6 | D7 | D8 | D9 | D10 | D11 | D12 | D1 | D2 };
+    static constexpr bitcards kCloverCards {C3 | C4 | C5 | C6 | C7 | C8 | C9 | C10 | C11 | C12 | C1 | C2 };
 
     /* カード全体。 */
     static Cards all() {
