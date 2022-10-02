@@ -123,14 +123,18 @@ TEST_F(IsTrumpTest, SingleJokerOnTable) {
 
 /* 相手がより強いカードを持っている場合の1枚出し。 */
 TEST_F(IsTrumpTest, WeakSingle) {
-  Hand hand{Cards::S3, {}};
+  src_player_cards_ = {Cards(Cards::S4), Cards(Cards::H3), Cards(Cards::H4), Cards(Cards::H5), Cards(Cards::H6)};
+  src_cards_of_opponents_ = Cards(Cards::H3 | Cards::H4 | Cards::H5 | Cards::H6);
+  updateSrcState();
+
+  Hand hand{Cards::S4, {}};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
 /* 相手がより強いカードを持っている場合の1枚出し(革命時)。 */
 TEST_F(IsTrumpTest, WeakSingleOnRevolution) {
-  src_player_cards_ = {Cards(Cards::S4), Cards(Cards::S3), Cards(Cards::H3), Cards(Cards::D3), Cards(Cards::C3)};
-  src_cards_of_opponents_ = Cards(Cards::S3 | Cards::H3 | Cards::D3 | Cards::C3);
+  src_player_cards_ = {Cards(Cards::S4), Cards(Cards::H3), Cards(Cards::H4), Cards(Cards::H5), Cards(Cards::H6)};
+  src_cards_of_opponents_ = Cards(Cards::H3 | Cards::H4 | Cards::H5 | Cards::H6);
   src_is_rev_ = true;
   updateSrcState();
 
@@ -306,6 +310,43 @@ TEST_F(IsTrumpTest, StrongestSequenceOnRevolution) {
   updateSrcState();
 
   Hand hand(Cards::S3 | Cards::S4 | Cards::S5, {});
+  EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
+}
+
+/* しばりがかかっている場合。 */
+TEST_F(IsTrumpTest, Locked) {
+  src_card_quantity_of_players_ = {1, 1, 1, 1, 1};
+  src_player_cards_ = {
+    Cards(Cards::S5),
+    Cards(Cards::D11),
+    Cards(Cards::D12),
+    Cards(Cards::D1),
+    Cards(Cards::D2)};
+  src_cards_of_opponents_ = Cards(Cards::D11 | Cards::D12 | Cards::D1 | Cards::D2);
+  src_table_hand_ = Hand(Cards::S4, {});
+  src_is_start_of_trick_ = false;
+  src_is_lock_ = true;
+  updateSrcState();
+
+  Hand hand(Cards::S5, {});
+  EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
+}
+
+/* しばりをかけて切札になる場合。 */
+TEST_F(IsTrumpTest, Lock) {
+  src_card_quantity_of_players_ = {1, 1, 1, 1, 1};
+  src_player_cards_ = {
+    Cards(Cards::S4),
+    Cards(Cards::D11),
+    Cards(Cards::D12),
+    Cards(Cards::D1),
+    Cards(Cards::D2)};
+  src_cards_of_opponents_ = Cards(Cards::D11 | Cards::D12 | Cards::D1 | Cards::D2);
+  src_table_hand_ = Hand(Cards::S3, {});
+  src_is_start_of_trick_ = false;
+  updateSrcState();
+
+  Hand hand(Cards::S4, {});
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 

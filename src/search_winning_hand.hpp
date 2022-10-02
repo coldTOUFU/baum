@@ -11,7 +11,7 @@
 bool anyOpponentsHaveNCards(const int n, const uecda::Table& table, const GameRecord& record);
 
 /* trump(切札: 確実に場を流せる)か？ */
-bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& record, const uecda::Hand& table_hand, const uecda::Cards& cards_of_opponents);
+bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& record, const uecda::Hand& table_hand, uecda::Cards cards_of_opponents);
 
 /* 必勝手を探索する。あればその手を返し、なければ空の手札を返す。 */
 uecda::Hand searchWinningHand(const uecda::Cards& my_cards, const uecda::Table& table, const GameRecord& record, const uecda::Hand& table_hand, const uecda::Cards& cards_of_opponents);

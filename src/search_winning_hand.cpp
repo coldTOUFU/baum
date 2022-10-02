@@ -9,7 +9,7 @@ bool anyOpponentsHaveNCards(const int n, const uecda::Table& table, const GameRe
   return false;
 }
 
-bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& record, const uecda::Hand& table_hand, const uecda::Cards& cards_of_opponents) {
+bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& record, const uecda::Hand& table_hand, uecda::Cards cards_of_opponents) {
   if (!hand.isLegal(table, table_hand)) { return false; }
 
   const uecda::HandSummary my_summary{hand.getSummary()};
@@ -27,8 +27,29 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
     /* 相手がジョーカーを持っていたら場を流せない。 */
     if (cards_of_opponents.hasJoker()) { return false; }
 
+    /* しばり発生時は、相手の持ち札にフィルタをかける。 */
+    if (table.is_lock || my_summary.suits == table_summary.suits) {
+      uecda::Cards::bitcards suit_filter{};
+      if (my_summary.suits % 2 == 1) {
+        suit_filter = uecda::Cards::kCloverCards;
+      } else if ((my_summary.suits >> 1) % 2 == 1) {
+        suit_filter = uecda::Cards::kDiamondCards;
+      } else if ((my_summary.suits >> 2) % 2 == 1) {
+        suit_filter = uecda::Cards::kHeartCards;
+      } else {
+        suit_filter = uecda::Cards::kSpadeCards;
+      }
+      cards_of_opponents = cards_of_opponents.filterCards(suit_filter);
+      /* 相手に出せるカードがない。 */
+      if (cards_of_opponents.quantity() == 0) { return true; }
+    }
+
     /* 相手の最強のカード以上の強さなら、またそのときに限り、場を流せる。1枚出しなので、革命時にweakest_orderで比較する必要はない。 */
-    return !uecda::Hand::isFormerWeaker(table.is_rev, my_summary.strongest_order, cards_of_opponents.strongestOrder());
+    if (!table.is_rev) {
+      return !uecda::Hand::isFormerWeaker(table.is_rev, my_summary.strongest_order, cards_of_opponents.strongestOrder());
+    } else {
+      return !uecda::Hand::isFormerWeaker(table.is_rev, my_summary.strongest_order, cards_of_opponents.weakestOrder());
+    }
   }
 
   /* 以下でhandを出した後の合法手について考えるので、tableを更新する。 */
