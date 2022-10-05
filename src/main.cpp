@@ -40,7 +40,7 @@ Hand selectHand(const int my_playernum, const UECdaState& state, const Cards& ca
   if (!submission_hand.getSummary().is_pass) { return submission_hand; }
 
   /* 必勝手がなければ、モンテカルロ木探索。 */
-  MonteCarloTreeNode<UECdaState, Hand, 5> mctnode = MonteCarloTreeNode<UECdaState, Hand, 5>(state, my_playernum, selectAsDefault);
+  MonteCarloTreeNode<UECdaState, Hand, 5> mctnode = MonteCarloTreeNode<UECdaState, Hand, 5>(state, my_playernum, selectAsDefault, 1.0);
   return mctnode.search();
 }
 
