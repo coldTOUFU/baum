@@ -31,8 +31,11 @@ namespace uecda {
     /* 手のサマリを返す。 */
     HandSummary getSummary() const { return this->summary_; }
 
-    /* 与えられたベクターに、与えられたカードから生成できる手をすべて追加する。 */
+    /* 与えられたベクターに、与えられたカードから生成できる手をすべて追加する。パスは除く。 */
     static void pushHands(const Cards& src, std::vector<Hand>& hand_vec);
+
+    /* 与えられたベクターに、与えられたカードから生成できる合法手をすべて追加する。パスは除く。 */
+    static void pushLegalHands(const Cards& src, std::vector<Hand>& hand_vec, const Table& table, const Hand& table_hand);
 
     /* ジョーカー以外のカードを返す。 */
     Cards getCards() const {

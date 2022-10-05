@@ -35,7 +35,6 @@ void uecda::Hand::pushHands(const Cards &src, std::vector<Hand>& hand_vec) {
   /* 手探索でフィルターにかけるとき邪魔なので、ジョーカーのビットを落とす。  */
   src_bit &= (Cards::bitcards)0xfffffffffffffff;
 
-
   for (int pair_qty = 1; pair_qty <= 4; pair_qty++) {
     Hand::pushPair(src_bit, hand_vec, pair_qty);
   }
@@ -56,6 +55,42 @@ void uecda::Hand::pushHands(const Cards &src, std::vector<Hand>& hand_vec) {
     for (int seq_qty = 3; seq_qty <= 14; seq_qty++) {
       Hand::pushSequenceWithJoker(src_bit, hand_vec, seq_qty);
     }
+  }
+}
+
+void uecda::Hand::pushLegalHands(const Cards& src, std::vector<Hand>& hand_vec, const Table& table, const Hand& table_hand) {
+  Cards::bitcards src_bit{src.toBitcards()};
+  /* 手探索でフィルターにかけるとき邪魔なので、ジョーカーのビットを落とす。  */
+  src_bit &= (Cards::bitcards)0xfffffffffffffff;
+
+  /* 場が空なら、何を出してもいいので作れる手を全部突っ込む。 */
+  if (table.is_start_of_trick) {
+    Hand::pushHands(src, hand_vec);
+    return;
+  }
+
+  std::vector<Hand> tmp_hand_vec{}; // 後で合法手だけをhand_vecに入れるための、一時的な配列。
+  if (!table_hand.getSummary().is_sequence) {
+    Hand::pushPair(src_bit, tmp_hand_vec, table_hand.getSummary().quantity);
+    if (src.hasJoker()) {
+      /* 場が1枚出しの場合は、ジョーカー1枚出しが何通りも生成されないようにする。 */
+      if (table_hand.getSummary().quantity == 1) {
+        const Cards::bitcards c{};
+        const Cards::bitcards j{(Cards::bitcards)1};
+        tmp_hand_vec.push_back(Hand(c, j));
+      } else {
+        Hand::pushPairWithJoker(src_bit, tmp_hand_vec, table_hand.getSummary().quantity);
+      }
+    }
+  } else {
+    Hand::pushSequence(src_bit, tmp_hand_vec, table_hand.getSummary().quantity);
+    if (src.hasJoker()) {
+      Hand::pushSequenceWithJoker(src_bit, tmp_hand_vec, table_hand.getSummary().quantity);
+    }
+  }
+
+  for (const Hand& h : tmp_hand_vec) {
+    if (h.isLegal(table, table_hand)) { hand_vec.push_back(h); }
   }
 }
 
