@@ -50,11 +50,11 @@ class UECdaState {
   /* 合法手の全体を返す。 */
   std::vector<uecda::Hand> legalActions() const {
     std::vector<uecda::Hand> dst{};
-    uecda::Hand::pushHands(player_cards_.at(table_.whose_turn), dst);
-    const std::vector<uecda::Hand>::iterator& end_of_legal = std::remove_if(dst.begin(), dst.end(),
-        [this](const uecda::Hand& h) { return !h.isLegal(table_, table_hand_); });
-    dst.erase(end_of_legal, dst.end());
-    dst.push_back(uecda::Hand()); // パスも合法手。
+    uecda::Hand::pushLegalHands(player_cards_.at(table_.whose_turn), dst, table_, table_hand_);
+    /* 場にカードがある場合は、パスも合法手に含める。ない場合は、無意味なので含めない。 */
+    if (!table_.is_start_of_trick) {
+      dst.push_back(uecda::Hand());
+    }
     return dst;
   }
 
