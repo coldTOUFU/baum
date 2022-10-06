@@ -156,7 +156,7 @@ class MonteCarloTreeNode {
     GameState state{this->current_state_};
 
     while (!state.isFinished()) {
-      state = state.next(selectForPlayout_(state));
+      state = state.next(epsilonGreedyAction(state));
     }
 
     std::array<int, kNumberOfPlayers> result{};
@@ -185,7 +185,7 @@ class MonteCarloTreeNode {
   }
 
   /* 与えられた局面に対してランダムな着手を選択。 */
-  static const GameAction randomAction(GameState& first_state) {
+  static const GameAction randomAction(const GameState& first_state) {
     std::random_device seed_gen;
     std::default_random_engine rand_engine(seed_gen());
 

@@ -94,7 +94,7 @@ namespace uecda {
       }
       os << std::endl;
       os << "  各席のプレイヤ番号: ";
-      for (const auto e: src.rank_of_players) {
+      for (const auto e: src.player_num_on_seats) {
         os << e << " ";
       }
       os << std::endl;
