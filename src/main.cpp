@@ -11,6 +11,7 @@
 #include "uecda_cpp/uecda_common.hpp"
 #include "uecda_cpp/sample_client/select_hand.hpp"
 #include "monte_carlo_tree/monte_carlo_tree_node.hpp"
+#include "monte_carlo_tree/uecda_monte_carlo_tree_node.hpp"
 #include "game_record.hpp"
 #include "uecda_state.hpp"
 #include "search_winning_hand.hpp"
