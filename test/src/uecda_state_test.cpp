@@ -350,6 +350,26 @@ TEST_F(NextTest, SubmissionAndGettingOut) {
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
 
+TEST_F(NextTest, SubmissionAndTrickFinished) {
+  src_card_quantity_of_players_ = {1, 1, 1, 1, 1};
+  src_record_.has_passed = {false, true, true, true, true};
+  src_player_cards_.at(0) = Cards({{{}, {0, 0, 1}}});
+  updateSrcState();
+
+  dst_card_quantity_of_players_ = {0, 1, 1, 1, 1};
+  dst_is_out_ = {true, false, false, false, false};
+  dst_is_start_of_trick_ = true;
+  dst_record_.has_passed = {true, false, false, false, false};
+  dst_player_cards_.at(0) = Cards();
+  dst_next_ranks_ = {0, -1, -1, -1, -1};
+  dst_table_hand_ = Hand();
+  updateDstState();
+
+  Hand next_action = Hand({{{}, {0, 0, 1}}});
+
+  EXPECT_EQ(src_state_.next(next_action), dst_state_);
+}
+
 TEST_F(NextTest, SubmissionAndGameFinished) {
   src_card_quantity_of_players_ = {1, 1, 0, 0, 0};
   src_is_out_ = {false, false, true, true, true};
