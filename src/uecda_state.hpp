@@ -122,9 +122,10 @@ class UECdaState {
     return cards_of_cur_player.hasAllOf(hand.getCards()) && hand.isLegal(table_, table_hand_);
   }
 
-  int nextPlayerNum() const {
+  /* player_numのプレイヤの次に座っているパスしていないプレイヤ。 */
+  int nextPlayerNumOf(const int player_num) const {
     const auto& num_on_seats{table_.player_num_on_seats};
-    const auto cur_seat_itr = std::find(num_on_seats.begin(), num_on_seats.end(), table_.whose_turn);
+    const auto cur_seat_itr = std::find(num_on_seats.begin(), num_on_seats.end(), player_num);
     const int cur_seat_idx{(int)std::distance(num_on_seats.begin(), cur_seat_itr)};
 
     /* 上がっていないプレイヤ内で次のプレイヤを探す。 */
@@ -134,7 +135,7 @@ class UECdaState {
         return next_player_num;
       }
     }
-    return table_.whose_turn;
+    return player_num;
   }
 
   bool submissionIs8Giri(const uecda::Hand& hand) const {
@@ -180,6 +181,7 @@ class UECdaState {
   UECdaState simulateSubmission(const uecda::Hand& hand) const;
 
   friend std::ostream& operator<<(std::ostream& os, const UECdaState& src) {
+    os << "## UECdaState" << std::endl;
     os << "# GameRecord" << std::endl;
     os << src.record_;
     os << "# 場の手" << std::endl;
