@@ -276,22 +276,22 @@ TEST_F(NextTest, PassAtLast) {
 }
 
 TEST_F(NextTest, PassAtLastWhenLastSubmittedPlayerIsOut) {
-  src_card_quantity_of_players_ = {2, 1, 1, 1, 0};
-  src_is_out_ = {false, false, false, false, true};
-  src_table_hand_ = Hand();
+  src_card_quantity_of_players_ = {2, 1, 1, 0, 1};
+  src_is_out_ = {false, false, false, true, false};
+  src_record_.last_submitted_player = 3;
   src_record_.has_passed = {false, true, true, true, true};
-  src_player_cards_.at(4) = {};
+  src_player_cards_.at(3) = {};
   updateSrcState();
   
-  dst_player_num_ = src_player_num_;
+  dst_player_num_ = 4;
   dst_is_start_of_trick_ = true;
   dst_card_quantity_of_players_ = src_card_quantity_of_players_;
   dst_is_out_ = src_is_out_;
   dst_table_hand_ = Hand();
   dst_record_.last_submitted_player = src_record_.last_submitted_player;
-  dst_record_.has_passed = {false, false, false, false, true};
+  dst_record_.has_passed = {false, false, false, true, false};
   dst_player_cards_.at(0) = src_player_cards_.at(0);
-  dst_player_cards_.at(4) = src_player_cards_.at(4);
+  dst_player_cards_.at(3) = src_player_cards_.at(3);
   dst_last_action_ = Hand();
   updateDstState();
 
