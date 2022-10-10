@@ -30,6 +30,11 @@ Hand selectHand(const int my_playernum, const UECdaState& state, const Cards& ca
   const Table table{state.getTable()};
   const Hand table_hand{state.getTableHand()};
 
+  // 合法手がなければ、何もしない。
+  std::vector<Hand> tmp{};
+  Hand::pushLegalHands(my_cards, tmp, table, table_hand);
+  if (tmp.size() <= 0) { return {}; }
+
   /* 自分がパスを出せば上がる状況のとき、パスを出す。 */
   if (record.last_submitted_player == my_playernum &&
       std::count_if(record.has_passed.begin(), record.has_passed.end(), [](bool b) { return b; }) == 4) {
