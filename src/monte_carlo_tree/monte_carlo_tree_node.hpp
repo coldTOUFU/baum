@@ -31,6 +31,11 @@ class MonteCarloTreeNode {
       std::terminate();
     }
 
+    /* 手が1つしかないなら、それを出す。 */
+    if (this->children_.size() == 1) {
+      return this->children_.at(0).current_state_.getLastAction();
+    }
+
     /* 探索。とりあえず、時間ではなく回数で探索に制限をかける。 */
     while (whole_play_cnt < MonteCarloTreeNode::kPlayoutLimit) {
       whole_play_cnt++;
