@@ -46,8 +46,7 @@ void uecda::Hand::pushHands(const Cards &src, std::vector<Hand>& hand_vec) {
     /* ジョーカー単騎 */
     const Cards::bitcards c{};
     const Cards::bitcards j{(Cards::bitcards)1};
-    const HandSummary hs{Hand::summarize(c, j)};
-    hand_vec.push_back(Hand(c, j, hs));
+    hand_vec.push_back(Hand::bitcards2Hand(c, j));
 
     for (int pair_qty = 2; pair_qty <= 4; pair_qty++) {
       Hand::pushPairWithJoker(src_bit, hand_vec, pair_qty);
@@ -77,8 +76,7 @@ void uecda::Hand::pushLegalHands(const Cards& src, std::vector<Hand>& hand_vec, 
       if (table_hand.getSummary().quantity == 1) {
         const Cards::bitcards c{};
         const Cards::bitcards j{(Cards::bitcards)1};
-        const HandSummary hs{Hand::summarize(c, j)};
-        tmp_hand_vec.push_back(Hand(c, j, hs));
+        tmp_hand_vec.push_back(Hand::bitcards2Hand(c, j));
       } else {
         Hand::pushPairWithJoker(src_bit, tmp_hand_vec, table_hand.getSummary().quantity);
       }
@@ -198,8 +196,7 @@ void uecda::Hand::pushPair(const Cards::bitcards src, std::vector<Hand> &hand_ve
       const Cards::bitcards tmpfilter{Hand::kPairFilters.at(pair_qty - 1).at(i) << j};
       if ((src & tmpfilter) == tmpfilter) {
         const Cards::bitcards j{};
-        const HandSummary hs{Hand::summarize(tmpfilter, j)};
-        hand_vec.push_back(Hand(tmpfilter, j, hs));
+        hand_vec.push_back(Hand::bitcards2Hand(tmpfilter, j));
       }
     }
   }
@@ -214,8 +211,7 @@ void uecda::Hand::pushPairWithJoker(const Cards::bitcards src, std::vector<Hand>
       if (Cards::count(src & tmpfilter) == pair_qty - 1) {
         const Cards::bitcards c{src & tmpfilter};
         const Cards::bitcards j{~src & tmpfilter};
-        const HandSummary hs{Hand::summarize(c, j)};
-        hand_vec.push_back(Hand(c, j, hs));
+        hand_vec.push_back(Hand::bitcards2Hand(c, j));
       }
     }
   }
@@ -231,8 +227,7 @@ void uecda::Hand::pushSequence(const Cards::bitcards src, std::vector<Hand> &han
       const Cards::bitcards tmpfilter{Hand::kSequenceFilters.at(seq_qty - 1) << (15 * i + j)};
       if((src & tmpfilter) == tmpfilter) { 
         const Cards::bitcards j{};
-        const HandSummary hs{Hand::summarize(tmpfilter, j)};
-        hand_vec.push_back(Hand(tmpfilter, j, hs));
+        hand_vec.push_back(Hand::bitcards2Hand(tmpfilter, j));
       }
     }
   }
@@ -249,8 +244,7 @@ void uecda::Hand::pushSequenceWithJoker(const Cards::bitcards src, std::vector<H
       if (Cards::count(src & tmpfilter) == seq_qty - 1) {
         const Cards::bitcards c{src & tmpfilter};
         const Cards::bitcards j{~src & tmpfilter};
-        const HandSummary hs{Hand::summarize(c, j)};
-        hand_vec.push_back(Hand(c, j, hs));
+        hand_vec.push_back(Hand::bitcards2Hand(c, j));
       }
     }
   }

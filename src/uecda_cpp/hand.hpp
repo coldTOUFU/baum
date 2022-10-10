@@ -28,11 +28,16 @@ namespace uecda {
     /* 手のサマリを返す。 */
     constexpr HandSummary getSummary() const { return summary_; }
 
+    /* 通常カードとジョーカーのビット表現から手を生成。 */
+    static Hand bitcards2Hand(Cards::bitcards c, Cards::bitcards j) {
+      return Hand(c, j, Hand::summarize(c, j));
+    }
+
     /* 通信配列から手を生成。 */
     static Hand communicationBody2Hand(common::CommunicationBody src) {
       const Cards::bitcards c{createCards(src).toBitcards()};
       const Cards::bitcards j{createJoker(src).toBitcards()};
-      return Hand(c, j, Hand::summarize(c, j));
+      return Hand::bitcards2Hand(c, j);
     }
 
     /* 与えられたベクターに、与えられたカードから生成できる手をすべて追加する。パスは除く。 */
