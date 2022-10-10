@@ -14,22 +14,26 @@ namespace uecda {
   class Hand {
    public:
     /* 空の手 = パス */
-    Hand(): cards_(), joker_(), summary_(Hand::summarize({}, {})) {};
-
-    /* 配列形式のカードから手を生成。 */
-    Hand(const uecda::common::CommunicationBody& src): cards_(Hand::createCards(src)), joker_(Hand::createJoker(src)), summary_(Hand::summarize(cards_.toBitcards(), joker_.toBitcards())) {};
+    constexpr Hand(): cards_(), joker_(), summary_() {}
 
     /* ビットカードから手を生成。 */
-    Hand(const Cards::bitcards src, const Cards::bitcards joker_src): cards_(Cards(src)), joker_(Cards(joker_src)), summary_(summarize(src, joker_src)) {};
+    constexpr Hand(const Cards::bitcards src, const Cards::bitcards joker_src, const HandSummary hs): cards_(Cards(src)), joker_(Cards(joker_src)), summary_(hs) {}
 
     /* コピー。 */
-    Hand(const uecda::Hand& src): cards_(src.cards_), joker_(src.joker_), summary_(src.summary_) {};
+    constexpr Hand(const uecda::Hand& src) = default;
 
     /* 与えられた状況に対して合法手か？ */
     bool isLegal(const Table& tbl, const Hand& table_hand) const;
 
     /* 手のサマリを返す。 */
-    HandSummary getSummary() const { return this->summary_; }
+    constexpr HandSummary getSummary() const { return summary_; }
+
+    /* 通信配列から手を生成。 */
+    static Hand communicationBody2Hand(common::CommunicationBody src) {
+      const Cards::bitcards c{createCards(src).toBitcards()};
+      const Cards::bitcards j{createJoker(src).toBitcards()};
+      return Hand(c, j, Hand::summarize(c, j));
+    }
 
     /* 与えられたベクターに、与えられたカードから生成できる手をすべて追加する。パスは除く。 */
     static void pushHands(const Cards& src, std::vector<Hand>& hand_vec);
@@ -38,36 +42,24 @@ namespace uecda {
     static void pushLegalHands(const Cards& src, std::vector<Hand>& hand_vec, const Table& table, const Hand& table_hand);
 
     /* ジョーカー以外のカードを返す。 */
-    Cards getCards() const {
-      return this->cards_;
-    }
+    constexpr Cards getCards() const { return cards_; }
 
     /* ジョーカーを返す。 */
-    Cards getJoker() const {
-      return this->joker_;
-    }
+    constexpr Cards getJoker() const { return joker_; }
 
     /* ジョーカーを含むカードを返す。ジョーカーの位置は特定できない。 */
-    Cards getWholeBitcards() const {
-      return this->cards_ + this->joker_;
-    }
+    constexpr Cards getWholeBitcards() const { return cards_ + joker_; }
 
     /* 革命を起こせる？ */
-    constexpr bool canRevolute() const {
-      return summary_.is_sequence ? summary_.quantity >= 5 : summary_.quantity >= 4;
-    }
+    constexpr bool canRevolute() const { return summary_.is_sequence ? summary_.quantity >= 5 : summary_.quantity >= 4; }
 
     /* 与えられた配列に手の構成カードを置く。 */
     void putCards(uecda::common::CommunicationBody& dst) const;
 
     /* デバッグ用に手を出力。 */
-    void print() const {
-      std::cout << *this;
-    }
+    void print() const { std::cout << *this; }
 
-    bool operator ==(const Hand& src) const {
-      return cards_ == src.cards_ && joker_ == src.joker_ && summary_ == src.summary_;
-    }
+    constexpr bool operator ==(const Hand& src) const { return cards_ == src.cards_ && joker_ == src.joker_ && summary_ == src.summary_; }
 
     /* order1がorder2より強い？ */
     constexpr static bool isFormerStronger(bool is_rev, Cards::bitcards order1, Cards::bitcards order2) {

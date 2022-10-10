@@ -76,25 +76,24 @@ namespace uecda {
     static constexpr bitcards kDiamondCards {D3 | D4 | D5 | D6 | D7 | D8 | D9 | D10 | D11 | D12 | D1 | D2 };
     static constexpr bitcards kCloverCards {C3 | C4 | C5 | C6 | C7 | C8 | C9 | C10 | C11 | C12 | C1 | C2 };
 
+    static Cards communicationBody2Cards(const uecda::common::CommunicationBody& src);
+
     /* カード全体。 */
     static Cards all() {
       return Cards((bitcards)0b1'011111111111110'011111111111110'011111111111110'011111111111110);
     }
 
     /* 空のカード。 */
-    Cards() {}
-
-    /* 配列形式のカードから生成。 */
-    Cards(const uecda::common::CommunicationBody& src);
+    constexpr Cards() {}
 
     /* ビットカードから生成。 */
-    Cards(const bitcards src) { this->cards_ = src; }
+    constexpr Cards(const bitcards src) { cards_ = src; }
 
     /* 与えられたビットカードの枚数を返す。 */
     static int count(const bitcards src);
 
     /* カードを返す。 */
-    bitcards toBitcards() const { return this->cards_; }
+    constexpr bitcards toBitcards() const { return cards_; }
 
     /* カードに含まれるスートを4bit形式で返す。 */
     int getSuits() const;
@@ -103,7 +102,7 @@ namespace uecda {
     int quantity() const;
 
     /* ジョーカーが含まれるか否かを返す。 */
-    bool hasJoker() const { return (this->cards_ >> 60) == 1; }
+    constexpr bool hasJoker() const { return (cards_ >> 60) == 1; }
 
     /* 最弱のカードを15bit形式で返す。 */
     bitcards weakestOrder() const;
@@ -113,7 +112,7 @@ namespace uecda {
 
     /* カードを1つずつに分ける */
     std::vector<Cards> devideIntoOneCards() {
-      bitcards src{this->cards_};
+      bitcards src{cards_};
       bitcards cur{(bitcards)1};
       std::vector<Cards> result{};
     
@@ -142,60 +141,34 @@ namespace uecda {
     void print();
 
     /* 与えられたカードを追加する。 */
-    Cards& operator +=(const Cards& src) {
-      this->cards_ |= src.cards_;
-      return *this;
-    }
+    constexpr Cards& operator +=(const Cards& src) { cards_ |= src.cards_; return *this; }
 
     /* 与えられたカードとの和からなるオブジェクトを返す。 */
-    Cards operator +(const Cards& src) const {
-      Cards dst{*this};
-      dst.cards_ |= src.cards_;
-      return dst;
-    }
+    constexpr Cards operator +(const Cards& src) const { return cards_ | src.cards_; }
 
     /* 与えられたカードを引く。 */
-    Cards& operator -=(const Cards& src) {
-      this->cards_ ^= (this->cards_ & src.cards_); 
-      return *this;
-    }
+    constexpr Cards& operator -=(const Cards& src) { cards_ ^= (cards_ & src.cards_); return *this; }
 
     /* 与えられたカードとの差からなるオブジェクトを返す。 */
-    Cards operator -(const Cards& src) const {
-      Cards dst{*this};
-      dst.cards_ ^= (dst.cards_ & src.cards_); 
-      return dst;
-    }
+    constexpr Cards operator -(const Cards& src) const { return cards_ ^ (cards_ & src.cards_); }
 
     /* 等しいか。 */
-    bool operator ==(const Cards& src) const {
-      return this->cards_ == src.cards_;
-    }
+    constexpr bool operator ==(const Cards& src) const { return cards_ == src.cards_; }
 
     /* 等しくないか。 */
-    bool operator !=(const Cards& src) const {
-      return !(*this == src);
-    }
+    constexpr bool operator !=(const Cards& src) const { return !(*this == src); }
 
     /* 与えられたカードをすべて含むか。 */
-    bool hasAllOf(const Cards& c) const {
-      return (c - *this).quantity() == 0;
-    }
+    constexpr bool hasAllOf(const Cards& c) const { return (c - *this) == Cards(); }
 
     /* 与えられたカードを1枚以上含むか。 */
-    bool hasAnyOf(const Cards& c) const {
-      return (c.quantity() == 0) || (*this - c) != *this;
-    }
+    constexpr bool hasAnyOf(const Cards& c) const { return (c == Cards()) || (*this - c) != *this; }
 
     /* カードに与えられたフィルターをかけた結果を返す。 */
-    bitcards filterCards(const bitcards filter) const {
-      return (this->cards_ & filter);
-    }
+    constexpr bitcards filterCards(const bitcards filter) const { return (cards_ & filter); }
 
     /* ジョーカーを除く。ジョーカーはワイルドカードでどかしづらいため。 */
-    void deleteJoker() {
-      this->cards_ &= (bitcards)0xfffffffffffffff;
-    }
+    constexpr void deleteJoker() { cards_ ^= JOKER; }
 
    private:
     bitcards cards_{};

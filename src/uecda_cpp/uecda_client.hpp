@@ -78,7 +78,7 @@ namespace uecda {
 
     /* 通信を切断する。 */
     void closeSocket() const {
-      if (close(this->sockfd_) != 0) {
+      if (close(sockfd_) != 0) {
         std::cerr << "サーバ切断に失敗しました: " << std::endl;
         throw CloseSocketException();
       }

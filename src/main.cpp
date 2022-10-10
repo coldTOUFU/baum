@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
       /* 平民以下なので何もしない。 */
     } else if (qty_to_change <= 2 && qty_to_change > 0) {
       /* 手札を作る */
-      const Cards my_cards = Cards(dealt_body);
+      const Cards my_cards = Cards(Cards::communicationBody2Cards(dealt_body));
       std::vector<Hand> hands(0);
       Hand::pushHands(my_cards, hands);
 
@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
     while (!is_round_end) {
       /* 自分の手札を受け取る */
       client.receiveMyCards(dealt_body);
-      Cards my_cards = Cards(dealt_body);
+      Cards my_cards = Cards(Cards::communicationBody2Cards(dealt_body));
       rest_cards -= my_cards;
       if (my_cards.hasJoker()) {
         rest_cards.deleteJoker();
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
       Table table = Table(dealt_body);
 
       /* 場の手を作る */
-      Hand table_hand = Hand(table_body);
+      Hand table_hand = Hand(Hand::communicationBody2Hand(table_body));
       rest_cards -= table_hand.getCards();
       if (table_hand.getSummary().has_joker) {
         rest_cards.deleteJoker();
@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
       }
 
       /* 前の場札を更新(パスなら現在の場札と同じ) */
-      last_table_hand = Hand(table_body);
+      last_table_hand = Hand(Hand::communicationBody2Hand(table_body));
       last_playernum = table.whose_turn;
 
       /* 場札を受け取る */
