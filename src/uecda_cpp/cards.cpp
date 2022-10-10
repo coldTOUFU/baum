@@ -67,7 +67,7 @@ int uecda::Cards::count(const bitcards src) {
   return (tmp & 0x00000000ffffffff) + (tmp >> 32 & 0x00000000ffffffff); // 64bits。
 }
 
-uecda::Cards::bitcards uecda::Cards::weakestOrder() const {
+uecda::Cards::card_order uecda::Cards::weakestOrder() const {
   bitcards tmp{cards_};
   tmp &= (bitcards)0xfffffffffffffff; // Jokerをビット列から落とす。
 
@@ -88,10 +88,10 @@ uecda::Cards::bitcards uecda::Cards::weakestOrder() const {
   /* 一番左の1以外を落とす。 */
   tmp ^= (tmp >> 1);
 
-  return tmp;
+  return (card_order)tmp;
 }
 
-uecda::Cards::bitcards uecda::Cards::strongestOrder() const {
+uecda::Cards::card_order uecda::Cards::strongestOrder() const {
   bitcards tmp{cards_};
   tmp &= (bitcards)0xfffffffffffffff; // Jokerをビット列から落とす。
 
@@ -104,7 +104,7 @@ uecda::Cards::bitcards uecda::Cards::strongestOrder() const {
   tmp = (tmp | (tmp >> 15) | (tmp >> 30) | (tmp >> 45)) & (0xffff >> 1);
 
   /* 一番右のbitだけ立てて返す。 */
-  return tmp & (-tmp);
+  return (card_order)(tmp & (-tmp));
 }
 
 void uecda::Cards::putCards(uecda::common::CommunicationBody &dst) const {

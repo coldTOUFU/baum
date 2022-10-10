@@ -61,16 +61,18 @@ namespace uecda {
 
     constexpr bool operator ==(const Hand& src) const { return cards_ == src.cards_ && joker_ == src.joker_ && summary_ == src.summary_; }
 
-    /* order1がorder2より強い？ */
-    constexpr static bool isFormerStronger(bool is_rev, Cards::bitcards order1, Cards::bitcards order2) {
-      /* orderは15bit整数で、(革命でない場合)小さいほど強い。 */
-      return (!is_rev && order1 < order2) || (is_rev && order1 > order2);
+    /* cards1がcards2より強い？ */
+    /* 強さの判定は階段の強さ判定に準じる。一方が空の場合とcards1とcards2の強さの範囲が被った場合は、強くも弱くもない、とする。 */
+    constexpr static bool isFormerStronger(const bool is_rev, const Cards& cards1, const Cards& cards2) {
+      return (!is_rev && !cards1.isEmpty() && !cards2.isEmpty() && cards1.weakestOrder() < cards2.strongestOrder()) ||
+          (is_rev && !cards1.isEmpty() && !cards2.isEmpty() && cards1.strongestOrder() > cards2.weakestOrder());
     }
 
-    /* order1がorder2より弱い？ */
-    constexpr static bool isFormerWeaker(bool is_rev, Cards::bitcards order1, Cards::bitcards order2) {
-      /* orderは15bit整数で、(革命でない場合)大きいほど弱い。 */
-      return (!is_rev && order1 > order2) || (is_rev && order1 < order2);
+    /* cards1がcards2より弱い？ */
+    /* 強さの判定は階段の強さ判定に準じる。一方が空の場合とcards1とcards2の強さの範囲が被った場合は、強くも弱くもない、とする。 */
+    constexpr static bool isFormerWeaker(const bool is_rev, const Cards& cards1, const Cards& cards2) {
+      return (!is_rev && !cards1.isEmpty() && !cards2.isEmpty() && cards1.strongestOrder() > cards2.weakestOrder()) ||
+          (is_rev && !cards1.isEmpty() && !cards2.isEmpty() && cards1.weakestOrder() < cards2.strongestOrder());
     }
 
    private:

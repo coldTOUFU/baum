@@ -11,6 +11,7 @@ namespace uecda {
   class Cards {
    public:
     using bitcards = uint_fast64_t;
+    using card_order = uint_fast16_t;
 
     /* 整数は、UECda-2007における標準ルール下でのカード表現と対応している。 */
     static constexpr int kSpade{0};
@@ -105,10 +106,10 @@ namespace uecda {
     constexpr bool hasJoker() const { return (cards_ >> 60) == 1; }
 
     /* 最弱のカードを15bit形式で返す。 */
-    bitcards weakestOrder() const;
+    card_order weakestOrder() const;
 
     /* 最強のカードを15bit形式で返す。 */
-    bitcards strongestOrder() const;
+    card_order strongestOrder() const;
 
     /* カードを1つずつに分ける */
     std::vector<Cards> devideIntoOneCards() {
@@ -158,11 +159,13 @@ namespace uecda {
     /* 等しくないか。 */
     constexpr bool operator !=(const Cards& src) const { return !(*this == src); }
 
+    constexpr bool isEmpty() const { return cards_ == (bitcards)0; }
+
     /* 与えられたカードをすべて含むか。 */
-    constexpr bool hasAllOf(const Cards& c) const { return (c - *this) == Cards(); }
+    constexpr bool hasAllOf(const Cards& c) const { return (c - *this).isEmpty(); }
 
     /* 与えられたカードを1枚以上含むか。 */
-    constexpr bool hasAnyOf(const Cards& c) const { return (c == Cards()) || (*this - c) != *this; }
+    constexpr bool hasAnyOf(const Cards& c) const { return c.isEmpty() || (*this - c) != *this; }
 
     /* カードに与えられたフィルターをかけた結果を返す。 */
     constexpr bitcards filterCards(const bitcards filter) const { return (cards_ & filter); }

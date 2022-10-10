@@ -20,9 +20,8 @@ bool uecda::Hand::isLegal(const Table &tbl, const Hand &table_hand) const {
   /* 場のカードと同枚数である必要がある。 */
   if (summary_.quantity != table_hand_summary.quantity) { return false; }
 
-  /* 出すカードの最弱が場のカードの最強より強い必要がある。 */
-  if (!tbl.is_rev && !isFormerStronger(tbl.is_rev, summary_.weakest_order, table_hand_summary.strongest_order)) { return false; }
-  if (tbl.is_rev && !isFormerStronger(tbl.is_rev, summary_.strongest_order, table_hand_summary.weakest_order)) { return false; }
+  /* 出すカードが場のカードより強い必要がある。 */
+  if (!isFormerStronger(tbl.is_rev, this->getWholeBitcards(), table_hand.getWholeBitcards())) { return false; }
 
   /* しばりなら、スートが一致する必要がある。 */
   if (tbl.is_lock && summary_.suits != table_hand_summary.suits) { return false; }
@@ -157,7 +156,7 @@ uecda::HandSummary uecda::Hand::summarize(const Cards::bitcards src, const Cards
     return {};
   }
 
-  const Cards::bitcards w_ord{std::max(src_card.weakestOrder(), joker_src_card.weakestOrder())};
+  const Cards::card_order w_ord{std::max(src_card.weakestOrder(), joker_src_card.weakestOrder())};
   /* s_ordについては、カードが空の場合見かけ上その強さが0(最強)になってしまうので、カードが空かどうかで場合分けする。 */
   Cards::bitcards s_ord;
   if (src_card.toBitcards() <= 0) {
