@@ -83,11 +83,11 @@ class SearchWinningHandTest : public IsTrumpTest {
 
 /* そもそも手が違法な場合。 */
 TEST_F(IsTrumpTest, Illegal) {
-  src_table_hand_ = Hand(Cards::H3, {});
+  src_table_hand_ = Hand(Hand::bitcards2Hand(Cards::H3, {}));
   src_is_start_of_trick_ = false;
   updateSrcState();
 
-  Hand hand{Cards::S3, {}};
+  Hand hand{Hand::bitcards2Hand(Cards::S3, {})};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -96,28 +96,28 @@ TEST_F(IsTrumpTest, Single8Giri) {
   src_player_cards_.at(0) = Cards(Cards::S8);
   updateSrcState();
 
-  Hand hand{Cards::S8, {}};
+  Hand hand{Hand::bitcards2Hand(Cards::S8, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
 /* スぺ3返し。 */
 TEST_F(IsTrumpTest, Spade3Gaeshi) {
-  src_table_hand_ = Hand({}, Cards::S3);
+  src_table_hand_ = Hand(Hand::bitcards2Hand({}, Cards::S3));
   src_is_start_of_trick_ = false;
   updateSrcState();
 
-  Hand hand{Cards::S3, {}};
+  Hand hand{Hand::bitcards2Hand(Cards::S3, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
 /* テーブルに1枚出しジョーカーがある場合のスペード3以外の1出し。 */
 TEST_F(IsTrumpTest, SingleJokerOnTable) {
   src_player_cards_.at(0) = Cards(Cards::S4);
-  src_table_hand_ = Hand({}, Cards::S3);
+  src_table_hand_ = Hand(Hand::bitcards2Hand({}, Cards::S3));
   src_is_start_of_trick_ = false;
   updateSrcState();
 
-  Hand hand{Cards::S4, {}};
+  Hand hand{Hand::bitcards2Hand(Cards::S4, {})};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -127,7 +127,7 @@ TEST_F(IsTrumpTest, WeakSingle) {
   src_cards_of_opponents_ = Cards(Cards::H3 | Cards::H4 | Cards::H5 | Cards::H6);
   updateSrcState();
 
-  Hand hand{Cards::S4, {}};
+  Hand hand{Hand::bitcards2Hand(Cards::S4, {})};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -138,7 +138,7 @@ TEST_F(IsTrumpTest, WeakSingleOnRevolution) {
   src_is_rev_ = true;
   updateSrcState();
 
-  Hand hand{Cards::S4, {}};
+  Hand hand{Hand::bitcards2Hand(Cards::S4, {})};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -148,7 +148,7 @@ TEST_F(IsTrumpTest, SameStrongSingle) {
   src_cards_of_opponents_ = Cards(Cards::H4 | Cards::S3 | Cards::H3 | Cards::D3);
   updateSrcState();
 
-  Hand hand{Cards::S4, {}};
+  Hand hand{Hand::bitcards2Hand(Cards::S4, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -159,7 +159,7 @@ TEST_F(IsTrumpTest, SameStrongSingleOnRevolution) {
   src_is_rev_ = true;
   updateSrcState();
 
-  Hand hand{Cards::S3, {}};
+  Hand hand{Hand::bitcards2Hand(Cards::S3, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -169,7 +169,7 @@ TEST_F(IsTrumpTest, StrongestSingle) {
   src_cards_of_opponents_ = Cards(Cards::S3 | Cards::H3 | Cards::D3 | Cards::C3);
   updateSrcState();
 
-  Hand hand{Cards::S4, {}};
+  Hand hand{Hand::bitcards2Hand(Cards::S4, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -180,7 +180,7 @@ TEST_F(IsTrumpTest, StrongestSingleOnRevolution) {
   src_is_rev_ = true;
   updateSrcState();
 
-  Hand hand{Cards::S3, {}};
+  Hand hand{Hand::bitcards2Hand(Cards::S3, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -191,7 +191,7 @@ TEST_F(IsTrumpTest, LargePair) {
   src_cards_of_opponents_ = Cards(Cards::S4 | Cards::H4 | Cards::D4 | Cards::C4);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::H3, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::H3, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -208,7 +208,7 @@ TEST_F(IsTrumpTest, SameStrongPair) {
   src_cards_of_opponents_ = Cards(Cards::D2 | Cards::C2 | Cards::S3 | Cards::H3 | Cards::D3);
   updateSrcState();
 
-  Hand hand(Cards::S2 | Cards::H2, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S2 | Cards::H2, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -226,7 +226,7 @@ TEST_F(IsTrumpTest, SameStrongPairOnRevolution) {
   src_is_rev_ = true;
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::H3, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::H3, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -243,7 +243,7 @@ TEST_F(IsTrumpTest, StrongestPair) {
   src_cards_of_opponents_ = Cards(Cards::S3 | Cards::H3 | Cards::S5 | Cards::H5 | Cards::D5);
   updateSrcState();
 
-  Hand hand(Cards::S2 | Cards::H2, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S2 | Cards::H2, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -261,7 +261,7 @@ TEST_F(IsTrumpTest, StrongestPairOnRevolution) {
   src_is_rev_ = true;
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::H3, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::H3, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -277,7 +277,7 @@ TEST_F(IsTrumpTest, LargeSequence) {
   src_cards_of_opponents_ = Cards(Cards::S6 | Cards::H6 | Cards::D6 | Cards::C6);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::S4 | Cards::S5, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::S4 | Cards::S5, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -293,7 +293,7 @@ TEST_F(IsTrumpTest, StrongestSequence) {
   src_cards_of_opponents_ = Cards(Cards::H3 | Cards::H4 | Cards::H5 | Cards::S7 | Cards::H7 | Cards::D7);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::S4 | Cards::S5, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::S4 | Cards::S5, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -309,7 +309,7 @@ TEST_F(IsTrumpTest, StrongestSequenceOnRevolution) {
   src_cards_of_opponents_ = Cards(Cards::H3 | Cards::H4 | Cards::H5 | Cards::S7 | Cards::H7 | Cards::D7);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::S4 | Cards::S5, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::S4 | Cards::S5, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -323,12 +323,12 @@ TEST_F(IsTrumpTest, Locked) {
     Cards(Cards::D1),
     Cards(Cards::D2)};
   src_cards_of_opponents_ = Cards(Cards::D11 | Cards::D12 | Cards::D1 | Cards::D2);
-  src_table_hand_ = Hand(Cards::S4, {});
+  src_table_hand_ = Hand(Hand::bitcards2Hand(Cards::S4, {}));
   src_is_start_of_trick_ = false;
   src_is_lock_ = true;
   updateSrcState();
 
-  Hand hand(Cards::S5, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S5, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -342,11 +342,11 @@ TEST_F(IsTrumpTest, Lock) {
     Cards(Cards::D1),
     Cards(Cards::D2)};
   src_cards_of_opponents_ = Cards(Cards::D11 | Cards::D12 | Cards::D1 | Cards::D2);
-  src_table_hand_ = Hand(Cards::S3, {});
+  src_table_hand_ = Hand(Hand::bitcards2Hand(Cards::S3, {}));
   src_is_start_of_trick_ = false;
   updateSrcState();
 
-  Hand hand(Cards::S4, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S4, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -363,7 +363,7 @@ TEST_F(IsTrumpTest, PairLastBranch) {
   src_cards_of_opponents_ = Cards(Cards::S3 | Cards::H3 | Cards::S5 | Cards::S6 | Cards::S7);
   updateSrcState();
 
-  Hand hand(Cards::S4 | Cards::H4, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S4 | Cards::H4, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -381,7 +381,7 @@ TEST_F(IsTrumpTest, PairOnRevolutionLastBranch) {
   src_is_rev_ = true;
   updateSrcState();
 
-  Hand hand(Cards::S6 | Cards::H6, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S6 | Cards::H6, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -397,7 +397,7 @@ TEST_F(IsTrumpTest, SequenceLastBranch) {
   src_cards_of_opponents_ = Cards(Cards::H3 | Cards::H4 | Cards::H5 | Cards::S7 | Cards::D7 | Cards::C7);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::S4 | Cards::S5, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::S4 | Cards::S5, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -414,7 +414,7 @@ TEST_F(IsTrumpTest, SequenceOnRevolutionLastBranch) {
   src_cards_of_opponents_ = Cards(Cards::H12 | Cards::H1 | Cards::H2 | Cards::S3 | Cards::H3 | Cards::D3);
   updateSrcState();
 
-  Hand hand(Cards::S12 | Cards::S1 | Cards::S2, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S12 | Cards::S1 | Cards::S2, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -431,7 +431,7 @@ TEST_F(IsTrumpTest, WeakPair) {
   src_cards_of_opponents_ = Cards(Cards::S4 | Cards::H4 | Cards::S5 | Cards::S6 | Cards::S7);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::H3, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::H3, {})};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -449,7 +449,7 @@ TEST_F(IsTrumpTest, WeakPairOnRevolution) {
   src_is_rev_ = true;
   updateSrcState();
 
-  Hand hand(Cards::S4 | Cards::H4, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S4 | Cards::H4, {})};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -466,7 +466,7 @@ TEST_F(IsTrumpTest, WeakPairWithJoker) {
   src_cards_of_opponents_ = Cards(Cards::S4 | Cards::JOKER | Cards::S5 | Cards::S6 | Cards::S7);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::H3, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::H3, {})};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -482,7 +482,7 @@ TEST_F(IsTrumpTest, WeakSequence) {
   src_cards_of_opponents_ = Cards(Cards::S6 | Cards::S7 | Cards::S8 | Cards::S9 | Cards::H9 | Cards::D9);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::S4 | Cards::S5, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::S4 | Cards::S5, {})};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -499,7 +499,7 @@ TEST_F(IsTrumpTest, WeakSequenceOnRevolution) {
   src_is_rev_ = true;
   updateSrcState();
 
-  Hand hand(Cards::S9 | Cards::S10 | Cards::S11, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S9 | Cards::S10 | Cards::S11, {})};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -515,7 +515,7 @@ TEST_F(IsTrumpTest, WeakSequenceWithJoker) {
   src_cards_of_opponents_ = Cards(Cards::S6 | Cards::S7 | Cards::JOKER | Cards::S9 | Cards::H9 | Cards::D9);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::S4 | Cards::S5, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::S4 | Cards::S5, {})};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -532,7 +532,7 @@ TEST_F(IsTrumpTest, RevolutingStrongestPair) {
   src_cards_of_opponents_ = Cards(Cards::S4 | Cards::H4 | Cards::D4 | Cards::C4 | Cards::S5 | Cards::S6 | Cards::S7);
   updateSrcState();
 
-  Hand hand(Cards::S3 | Cards::H3 | Cards::D3 | Cards::C3, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S3 | Cards::H3 | Cards::D3 | Cards::C3, {})};
   EXPECT_TRUE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
@@ -549,13 +549,13 @@ TEST_F(IsTrumpTest, RevolutingWeakPair) {
   src_cards_of_opponents_ = Cards(Cards::S3 | Cards::H3 | Cards::D3 | Cards::C3 | Cards::S5 | Cards::S6 | Cards::S7);
   updateSrcState();
 
-  Hand hand(Cards::S4 | Cards::H4 | Cards::D4 | Cards::C4, {});
+  Hand hand{Hand::bitcards2Hand(Cards::S4 | Cards::H4 | Cards::D4 | Cards::C4, {})};
   EXPECT_FALSE(isTrump(hand, src_table_, src_record_, src_state_.getTableHand(), src_cards_of_opponents_));
 }
 
 /* 一手詰め。 */
 TEST_F(SearchWinningHandTest, OneMoveToWin) {
-  Hand dst_hand{Cards::S3, {}};
+  Hand dst_hand{Hand::bitcards2Hand(Cards::S3, {})};
   EXPECT_EQ(searchWinningHand(src_my_cards_, src_table_, src_record_, src_table_hand_, src_cards_of_opponents_), dst_hand);
 }
 
@@ -565,7 +565,7 @@ TEST_F(SearchWinningHandTest, TwoMoveToWin) {
   src_card_quantity_of_players_ = {2, 1, 1, 1, 1};
   src_player_cards_ = {src_my_cards_, Cards::S1, Cards::H1, Cards::D1, Cards::C1};
   src_cards_of_opponents_ = Cards(Cards::S1 | Cards::H1 | Cards::D1 | Cards::C1);
-  Hand dst_hand{Cards::S2, {}};
+  Hand dst_hand{Hand::bitcards2Hand(Cards::S2, {})};
   EXPECT_EQ(searchWinningHand(src_my_cards_, src_table_, src_record_, src_table_hand_, src_cards_of_opponents_), dst_hand);
 }
 
@@ -575,9 +575,9 @@ TEST_F(SearchWinningHandTest, TwoMoveToWinOnTableHand) {
   src_card_quantity_of_players_ = {2, 1, 1, 1, 1};
   src_player_cards_ = {src_my_cards_, Cards::S1, Cards::H1, Cards::D1, Cards::C1};
   src_cards_of_opponents_ = Cards(Cards::S1 | Cards::H1 | Cards::D1 | Cards::C1);
-  src_table_hand_ = Hand(Cards::S12, {});
+  src_table_hand_ = Hand(Hand::bitcards2Hand(Cards::S12, {}));
   src_is_start_of_trick_ = false;
-  Hand dst_hand{Cards::S2, {}};
+  Hand dst_hand{Hand::bitcards2Hand(Cards::S2, {})};
   EXPECT_EQ(searchWinningHand(src_my_cards_, src_table_, src_record_, src_table_hand_, src_cards_of_opponents_), dst_hand);
 }
 

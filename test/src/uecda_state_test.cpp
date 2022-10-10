@@ -109,13 +109,13 @@ class NextTest: public UECdaStateTest {
     src_rank_of_players_ = {0, 1, 2, 3, 4};
     src_player_num_on_seats_ = {0, 1, 2, 3, 4};
     src_record_ = {4, {}};
-    src_table_hand_ = Hand((common::CommunicationBody){0, 1});
+    src_table_hand_ = Hand::communicationBody2Hand({0, 1});
     src_player_cards_ = {
-      Cards({{{}, {0, 1, 1}}}),
-      Cards({0, 0, 0, 1}),
-      Cards({{{}, {0, 0, 0, 1}}}),
-      Cards({{{}, {}, {0, 0, 0, 1}}}),
-      Cards({{{}, {}, {}, {0, 0, 0, 1}}})
+      Cards::communicationBody2Cards({{{}, {0, 1, 1}}}),
+      Cards::communicationBody2Cards({0, 0, 0, 1}),
+      Cards::communicationBody2Cards({{{}, {0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({{{}, {}, {0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({{{}, {}, {}, {0, 0, 0, 1}}})
     };
     src_next_ranks_ = {-1, -1, -1, -1, -1};
     src_last_action_ = src_table_hand_;
@@ -130,13 +130,13 @@ class NextTest: public UECdaStateTest {
     dst_rank_of_players_ = {0, 1, 2, 3, 4};
     dst_player_num_on_seats_ = {0, 1, 2, 3, 4};
     dst_record_ = {src_player_num_, {}};
-    dst_table_hand_ = Hand({{{}, {0, 0, 1}}});
+    dst_table_hand_ = Hand::communicationBody2Hand({{{}, {0, 0, 1}}});
     dst_player_cards_ = {
-      Cards((common::CommunicationBody){{{}, {0, 1, 0}}}),
-      Cards((common::CommunicationBody){{{0, 0, 0, 1}}}),
-      Cards((common::CommunicationBody){{{}, {0, 0, 0, 1}}}),
-      Cards((common::CommunicationBody){{{}, {}, {0, 0, 0, 1}}}),
-      Cards((common::CommunicationBody){{{}, {}, {}, {0, 0, 0, 1}}})
+      Cards::communicationBody2Cards({{{}, {0, 1, 0}}}),
+      Cards::communicationBody2Cards({{{0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({{{}, {0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({{{}, {}, {0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({{{}, {}, {}, {0, 0, 0, 1}}})
     };
     dst_next_ranks_ = {-1, -1, -1, -1, -1};
     dst_last_action_ = dst_table_hand_;
@@ -156,13 +156,13 @@ class LegalActionsTest: public UECdaStateTest {
     src_rank_of_players_ = {0, 1, 2, 3, 4};
     src_player_num_on_seats_ = {0, 1, 2, 3, 4};
     src_record_ = {4, {}};
-    src_table_hand_ = Hand({{{0, 1}, {0, 1}}});
+    src_table_hand_ = Hand::communicationBody2Hand({{{0, 1}, {0, 1}}});
     src_player_cards_ = {
-      Cards({{{0, 0, 1}, {0, 0, 1, 1}, {0, 0, 1, 1}, {0, 0, 1}}}),
-      Cards({0, 0, 0, 0, 1}),
-      Cards({{{}, {0, 0, 0, 0, 1}}}),
-      Cards({{{}, {}, {0, 0, 0, 0, 1}}}),
-      Cards({{{}, {}, {}, {0, 0, 0, 0, 1}}})
+      Cards::communicationBody2Cards({{{0, 0, 1}, {0, 0, 1, 1}, {0, 0, 1, 1}, {0, 0, 1}}}),
+      Cards::communicationBody2Cards({0, 0, 0, 0, 1}),
+      Cards::communicationBody2Cards({{{}, {0, 0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({{{}, {}, {0, 0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({{{}, {}, {}, {0, 0, 0, 0, 1}}})
     };
     src_next_ranks_ = {-1, -1, -1, -1, -1};
     src_last_action_ = src_table_hand_;
@@ -182,13 +182,13 @@ class IsFinishedTest: public UECdaStateTest {
     src_rank_of_players_ = {0, 1, 2, 3, 4};
     src_player_num_on_seats_ = {0, 1, 2, 3, 4};
     src_record_ = {4, {}};
-    src_table_hand_ = Hand((common::CommunicationBody){0, 1});
+    src_table_hand_ = Hand::communicationBody2Hand({0, 1});
     src_player_cards_ = {
-      Cards({{{}, {0, 0, 0, 1}}}),
-      Cards({0, 0, 0, 0, 1}),
-      Cards({{{}, {0, 0, 0, 0, 1}}}),
-      Cards({{{}, {}, {0, 0, 0, 0, 1}}}),
-      Cards({{{}, {}, {}, {0, 0, 0, 0, 1}}})
+      Cards::communicationBody2Cards({{{}, {0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({0, 0, 0, 0, 1}),
+      Cards::communicationBody2Cards({{{}, {0, 0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({{{}, {}, {0, 0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({{{}, {}, {}, {0, 0, 0, 0, 1}}})
     };
     src_next_ranks_ = {-1, -1, -1, -1, -1};
     src_last_action_ = src_table_hand_;
@@ -208,7 +208,7 @@ class GetScoreTest: public UECdaStateTest {
     src_rank_of_players_ = {0, 1, 2, 3, 4};
     src_player_num_on_seats_ = {0, 1, 2, 3, 4};
     src_record_ = {4, {true, true, true, true, true}};
-    src_table_hand_ = Hand((common::CommunicationBody){0, 1});
+    src_table_hand_ = Hand::communicationBody2Hand({0, 1});
     src_player_cards_ = {};
     src_next_ranks_ = {0, 1, 2, 3, 4};
     src_last_action_ = src_table_hand_;
@@ -228,13 +228,13 @@ class GetLastActionTest: public UECdaStateTest {
     src_rank_of_players_ = {0, 1, 2, 3, 4};
     src_player_num_on_seats_ = {0, 1, 2, 3, 4};
     src_record_ = {4, {}};
-    src_table_hand_ = Hand((common::CommunicationBody){0, 1});
+    src_table_hand_ = Hand::communicationBody2Hand({0, 1});
     src_player_cards_ = {
-      Cards({{{}, {0, 1, 1}}}),
-      Cards({0, 0, 0, 1}),
-      Cards({{{}, {0, 0, 0, 1}}}),
-      Cards({{{}, {}, {0, 0, 0, 1}}}),
-      Cards({{{}, {}, {}, {0, 0, 0, 1}}})
+      Cards::communicationBody2Cards({{{}, {0, 1, 1}}}),
+      Cards::communicationBody2Cards({0, 0, 0, 1}),
+      Cards::communicationBody2Cards({{{}, {0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({{{}, {}, {0, 0, 0, 1}}}),
+      Cards::communicationBody2Cards({{{}, {}, {}, {0, 0, 0, 1}}})
     };
     src_next_ranks_ = {-1, -1, -1, -1, -1};
     src_last_action_ = src_table_hand_;
@@ -309,22 +309,22 @@ TEST_F(NextTest, IllegalSubmission) {
   dst_last_action_ = Hand();
   updateDstState();
 
-  Hand next_action = Hand({{{}, {1}}});
+  Hand next_action = Hand::communicationBody2Hand({{{}, {1}}});
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
 
 TEST_F(NextTest, NormalSubmission) {
-  Hand next_action = Hand({{{}, {0, 0, 1}}});
+  Hand next_action = Hand::communicationBody2Hand({{{}, {0, 0, 1}}});
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
 
 TEST_F(NextTest, NormalSubmissionWithJoker) {
-  src_player_cards_.at(0) = Cards({{{}, {0, 1}, {}, {}, {1}}});
+  src_player_cards_.at(0) = Cards::communicationBody2Cards({{{}, {0, 1}, {}, {}, {1}}});
   updateSrcState();
 
-  dst_table_hand_ = Hand({2}); // uecda::Handの仕様に合わせて、ジョーカーは左端に置いている。
+  dst_table_hand_ = Hand::communicationBody2Hand({2}); // uecda::Handの仕様に合わせて、ジョーカーは左端に置いている。
   dst_last_action_ = dst_table_hand_;
   updateDstState();
 
@@ -335,7 +335,7 @@ TEST_F(NextTest, NormalSubmissionWithJoker) {
 
 TEST_F(NextTest, SubmissionAndGettingOut) {
   src_card_quantity_of_players_ = {1, 1, 1, 1, 1};
-  src_player_cards_.at(0) = Cards({{{}, {0, 0, 1}}});
+  src_player_cards_.at(0) = Cards::communicationBody2Cards({{{}, {0, 0, 1}}});
   updateSrcState();
 
   dst_card_quantity_of_players_ = {0, 1, 1, 1, 1};
@@ -345,7 +345,7 @@ TEST_F(NextTest, SubmissionAndGettingOut) {
   dst_next_ranks_ = {0, -1, -1, -1, -1};
   updateDstState();
 
-  Hand next_action = Hand({{{}, {0, 0, 1}}});
+  Hand next_action = Hand::communicationBody2Hand({{{}, {0, 0, 1}}});
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
@@ -353,7 +353,7 @@ TEST_F(NextTest, SubmissionAndGettingOut) {
 TEST_F(NextTest, SubmissionAndTrickFinished) {
   src_card_quantity_of_players_ = {1, 1, 1, 1, 1};
   src_record_.has_passed = {false, true, true, true, true};
-  src_player_cards_.at(0) = Cards({{{}, {0, 0, 1}}});
+  src_player_cards_.at(0) = Cards::communicationBody2Cards({{{}, {0, 0, 1}}});
   updateSrcState();
 
   dst_card_quantity_of_players_ = {0, 1, 1, 1, 1};
@@ -365,7 +365,7 @@ TEST_F(NextTest, SubmissionAndTrickFinished) {
   dst_table_hand_ = Hand();
   updateDstState();
 
-  Hand next_action = Hand({{{}, {0, 0, 1}}});
+  Hand next_action = Hand::communicationBody2Hand({{{}, {0, 0, 1}}});
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
@@ -374,7 +374,7 @@ TEST_F(NextTest, SubmissionAndGameFinished) {
   src_card_quantity_of_players_ = {1, 1, 0, 0, 0};
   src_is_out_ = {false, false, true, true, true};
   src_record_.has_passed = {false, false, true, true, true};
-  src_player_cards_.at(0) = Cards({{{}, {0, 0, 1}}});
+  src_player_cards_.at(0) = Cards::communicationBody2Cards({{{}, {0, 0, 1}}});
   src_player_cards_.at(2) = Cards();
   src_player_cards_.at(3) = Cards();
   src_player_cards_.at(4) = Cards();
@@ -391,17 +391,17 @@ TEST_F(NextTest, SubmissionAndGameFinished) {
   dst_next_ranks_ = {3, 4, 0, 1, 2};
   updateDstState();
 
-  Hand next_action = Hand({{{}, {0, 0, 1}}});
+  Hand next_action = Hand::communicationBody2Hand({{{}, {0, 0, 1}}});
 
   EXPECT_EQ(src_state_.next(next_action), dst_state_);
 }
 
 TEST_F(NextTest, SubmissionAndLock) {
-  src_player_cards_.at(0) = Cards({{{0, 0, 1}, {0, 1, 0}}});
+  src_player_cards_.at(0) = Cards::communicationBody2Cards({{{0, 0, 1}, {0, 1, 0}}});
   updateSrcState();
 
   dst_is_lock_ = true;
-  dst_table_hand_ = Hand({0, 0, 1});
+  dst_table_hand_ = Hand::communicationBody2Hand({0, 0, 1});
   dst_last_action_ = dst_table_hand_;
   updateDstState();
 
@@ -414,11 +414,11 @@ TEST_F(NextTest, SubmissionAndRev) {
   src_is_start_of_trick_ = true;
   src_card_quantity_of_players_ = {5, 1, 1, 1, 1};
   src_table_hand_ = Hand();
-  src_player_cards_.at(0) = Cards({{{0, 0, 1}, {0, 1, 1}, {0, 0, 1}, {0, 0, 1}}});
+  src_player_cards_.at(0) = Cards::communicationBody2Cards({{{0, 0, 1}, {0, 1, 1}, {0, 0, 1}, {0, 0, 1}}});
   updateSrcState();
 
   dst_is_rev_ = true;
-  dst_table_hand_ = Hand({{{0, 0, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}});
+  dst_table_hand_ = Hand::communicationBody2Hand({{{0, 0, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}});
   dst_last_action_ = dst_table_hand_;
   updateDstState();
 
@@ -428,13 +428,13 @@ TEST_F(NextTest, SubmissionAndRev) {
 }
 
 TEST_F(NextTest, Submission8GiriSingle) {
-  src_player_cards_.at(0) = Cards({{{}, {0, 1, 0, 0, 0, 0, 1}}});
+  src_player_cards_.at(0) = Cards::communicationBody2Cards({{{}, {0, 1, 0, 0, 0, 0, 1}}});
   updateSrcState();
 
   dst_player_num_ = src_player_num_;
   dst_is_start_of_trick_ = true;
   dst_table_hand_ = Hand();
-  dst_last_action_ = Hand({{{}, {0, 0, 0, 0, 0, 0, 1}}});
+  dst_last_action_ = Hand::communicationBody2Hand({{{}, {0, 0, 0, 0, 0, 0, 1}}});
   updateDstState();
 
   Hand next_action = dst_last_action_;
@@ -444,14 +444,14 @@ TEST_F(NextTest, Submission8GiriSingle) {
 
 TEST_F(NextTest, Submission8GiriPair) {
   src_card_quantity_of_players_ = {3, 1, 1, 1, 1};
-  src_table_hand_ = Hand({{{0, 1}, {0, 1}}});
-  src_player_cards_.at(0) = Cards({{{}, {0, 1, 0, 0, 0, 0, 1}, {0, 0, 0, 0, 0, 0, 1}}});
+  src_table_hand_ = Hand::communicationBody2Hand({{{0, 1}, {0, 1}}});
+  src_player_cards_.at(0) = Cards::communicationBody2Cards({{{}, {0, 1, 0, 0, 0, 0, 1}, {0, 0, 0, 0, 0, 0, 1}}});
   updateSrcState();
 
   dst_player_num_ = src_player_num_;
   dst_is_start_of_trick_ = true;
   dst_table_hand_ = Hand();
-  dst_last_action_ = Hand({{{}, {0, 0, 0, 0, 0, 0, 1}, {0, 0, 0, 0, 0, 0, 1}}});
+  dst_last_action_ = Hand::communicationBody2Hand({{{}, {0, 0, 0, 0, 0, 0, 1}, {0, 0, 0, 0, 0, 0, 1}}});
   updateDstState();
 
   Hand next_action = dst_last_action_;
@@ -461,14 +461,14 @@ TEST_F(NextTest, Submission8GiriPair) {
 
 TEST_F(NextTest, Submission8GiriSequence) {
   src_card_quantity_of_players_ = {4, 1, 1, 1, 1};
-  src_table_hand_ = Hand({0, 1, 1, 1});
-  src_player_cards_.at(0) = Cards({{{}, {0, 1, 0, 0, 1, 1, 1}}});
+  src_table_hand_ = Hand::communicationBody2Hand({0, 1, 1, 1});
+  src_player_cards_.at(0) = Cards::communicationBody2Cards({{{}, {0, 1, 0, 0, 1, 1, 1}}});
   updateSrcState();
 
   dst_player_num_ = src_player_num_;
   dst_is_start_of_trick_ = true;
   dst_table_hand_ = Hand();
-  dst_last_action_ = Hand({{{}, {0, 0, 0, 0, 1, 1, 1}}});
+  dst_last_action_ = Hand::communicationBody2Hand({{{}, {0, 0, 0, 0, 1, 1, 1}}});
   updateDstState();
 
   Hand next_action = dst_last_action_;
@@ -477,14 +477,14 @@ TEST_F(NextTest, Submission8GiriSequence) {
 }
 
 TEST_F(NextTest, SubmissionSpade3GaeshiSingle) {
-  src_table_hand_ = Hand({2});
-  src_player_cards_.at(0) = Cards({{{0, 1}, {0, 1}}});
+  src_table_hand_ = Hand::communicationBody2Hand({2});
+  src_player_cards_.at(0) = Cards::communicationBody2Cards({{{0, 1}, {0, 1}}});
   updateSrcState();
 
   dst_player_num_ = src_player_num_;
   dst_is_start_of_trick_ = true;
   dst_table_hand_ = Hand();
-  dst_last_action_ = Hand((common::CommunicationBody){0, 1});
+  dst_last_action_ = Hand::communicationBody2Hand({0, 1});
   updateDstState();
 
   Hand next_action = dst_last_action_;
@@ -496,13 +496,13 @@ TEST_F(LegalActionsTest, Normal) {
   std::vector<Hand> result_legal_actions = src_state_.legalActions();
 
   std::vector<Hand> dst_legal_actions = {{
-    Hand({{{0, 0, 1}, {0, 0, 1}}}),
-    Hand({{{0, 0, 1}, {}, {0, 0, 1}}}),
-    Hand({{{0, 0, 1}, {}, {}, {0, 0, 1}}}),
-    Hand({{{}, {0, 0, 1}, {0, 0, 1}}}),
-    Hand({{{}, {0, 0, 1}, {}, {0, 0, 1}}}),
-    Hand({{{}, {}, {0, 0, 1}, {0, 0, 1}}}),
-    Hand({{{}, {0, 0, 0, 1}, {0, 0, 0, 1}}}),
+    Hand::communicationBody2Hand({{{0, 0, 1}, {0, 0, 1}}}),
+    Hand::communicationBody2Hand({{{0, 0, 1}, {}, {0, 0, 1}}}),
+    Hand::communicationBody2Hand({{{0, 0, 1}, {}, {}, {0, 0, 1}}}),
+    Hand::communicationBody2Hand({{{}, {0, 0, 1}, {0, 0, 1}}}),
+    Hand::communicationBody2Hand({{{}, {0, 0, 1}, {}, {0, 0, 1}}}),
+    Hand::communicationBody2Hand({{{}, {}, {0, 0, 1}, {0, 0, 1}}}),
+    Hand::communicationBody2Hand({{{}, {0, 0, 0, 1}, {0, 0, 0, 1}}}),
     Hand()
   }};
 
@@ -521,10 +521,10 @@ TEST_F(IsFinishedTest, SomePlayersAreOut) {
   src_is_out_ = {false, true, true, false, true};
   src_record_ = {4, {false, true, true, false, true}};
   src_player_cards_ = {
-    Cards({{{}, {0, 0, 0, 1}}}),
+    Cards::communicationBody2Cards({{{}, {0, 0, 0, 1}}}),
     {},
     {},
-    Cards({{{}, {}, {0, 0, 0, 0, 1}}}),
+    Cards::communicationBody2Cards({{{}, {}, {0, 0, 0, 0, 1}}}),
     {}
   };
   src_next_ranks_ = {-1, 0, 1, -1, 2};
@@ -568,8 +568,8 @@ TEST_F(GetScoreTest, Undetermined) {
   src_card_quantity_of_players_ = {1, 1, 0, 0, 0};
   src_record_ = {4, {false, false, true, true, true}};
   src_player_cards_ = {{
-    Cards({0, 0, 1}),
-    Cards({0, 0, 0, 1})
+    Cards::communicationBody2Cards({0, 0, 1}),
+    Cards::communicationBody2Cards({0, 0, 0, 1})
   }};
   src_next_ranks_ = {-1, -1, 0, 1, 2};
   updateSrcState();
@@ -578,5 +578,5 @@ TEST_F(GetScoreTest, Undetermined) {
 }
 
 TEST_F(GetLastActionTest, Normal) {
-  EXPECT_EQ(src_state_.getLastAction(), Hand((common::CommunicationBody){0, 1}));
+  EXPECT_EQ(src_state_.getLastAction(), Hand::communicationBody2Hand({0, 1}));
 }
