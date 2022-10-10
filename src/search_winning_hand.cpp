@@ -44,12 +44,9 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
       if (cards_of_opponents.quantity() == 0) { return true; }
     }
 
-    /* 相手の最強のカード以上の強さなら、またそのときに限り、場を流せる。1枚出しなので、革命時にweakest_orderで比較する必要はない。 */
-    if (!table.is_rev) {
-      return !uecda::Hand::isFormerWeaker(table.is_rev, my_summary.strongest_order, cards_of_opponents.strongestOrder());
-    } else {
-      return !uecda::Hand::isFormerWeaker(table.is_rev, my_summary.strongest_order, cards_of_opponents.weakestOrder());
-    }
+    /* 相手の最強のカード以上の強さなら、またそのときに限り、場を流せる。 */
+    const uecda::Cards strongest_card_of_opponent{!table.is_rev ? cards_of_opponents.strongestOrder() : cards_of_opponents.weakestOrder()};
+    return !uecda::Hand::isFormerWeaker(table.is_rev, hand.getWholeBitcards(), strongest_card_of_opponent);
   }
 
   /* 以下でhandを出した後の合法手について考えるので、tableを更新する。 */
@@ -63,8 +60,8 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
     if (!anyOpponentsHaveNCards(my_summary.quantity, table, record)) { return true; }
 
     /* 相手の最強のカード以上の強さなら、場を流せる。なくてもいいけど、相手の手札群から手を生成して合法判定するのはコストがかかるのでここで引っ掛けて時間節約したいなという気持ち。 */
-    if ((!table.is_rev && !uecda::Hand::isFormerWeaker(table.is_rev, my_summary.strongest_order, cards_of_opponents.strongestOrder())) ||
-        (table.is_rev && !uecda::Hand::isFormerWeaker(table.is_rev, my_summary.weakest_order, cards_of_opponents.weakestOrder()))) { return true; }
+    const uecda::Cards strongest_card_of_opponent{!table.is_rev ? cards_of_opponents.strongestOrder() : cards_of_opponents.weakestOrder()};
+    if (!uecda::Hand::isFormerWeaker(table.is_rev, hand.getWholeBitcards(), strongest_card_of_opponent)) { return true; }
   } else { /* 階段の場合。 */
     /* 枚数分出せるプレイヤがいなければ、場を流せる。 */
     if (!anyOpponentsHaveNCards(my_summary.quantity, table, record)) { return true; }
@@ -77,8 +74,7 @@ bool isTrump(const uecda::Hand& hand, uecda::Table table, const GameRecord& reco
     /* 相手の最強のカードとhandの最強のカードの強さがn未満しか離れていなければ、場を流せる。 */
     n -= (cards_of_opponents.hasJoker() ? 1 : 0); // 相手がジョーカーを持っていそうなら、ジョーカーを端に置けるので1枚分制約を緩くする。
     const uecda::Cards::bitcards lower_bound{!table.is_rev ? my_summary.strongest_order >> n : my_summary.weakest_order << n}; // 相手の最強のカードの下界。
-    if ((!table.is_rev && uecda::Hand::isFormerStronger(table.is_rev, lower_bound, cards_of_opponents.strongestOrder())) ||
-        (table.is_rev && uecda::Hand::isFormerStronger(table.is_rev, lower_bound, cards_of_opponents.weakestOrder()))) { return true;}
+    if (uecda::Hand::isFormerStronger(table.is_rev, uecda::Cards(lower_bound), cards_of_opponents)) { return true; }
   }
 
   /* 相手のカードで合法手が構成できなければ場を流せる。できるなら当然流せるとは言えない。 */
