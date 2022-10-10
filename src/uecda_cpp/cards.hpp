@@ -171,7 +171,7 @@ namespace uecda {
     constexpr bitcards filterCards(const bitcards filter) const { return (cards_ & filter); }
 
     /* ジョーカーを除く。ジョーカーはワイルドカードでどかしづらいため。 */
-    constexpr void deleteJoker() { cards_ ^= JOKER; }
+    constexpr void deleteJoker() { cards_ ^= (cards_ & JOKER); }
 
    private:
     bitcards cards_{};
