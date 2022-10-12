@@ -16,8 +16,8 @@ class MonteCarloTreeNode {
   /* このクラスをvectorで扱うために必要。 */
   MonteCarloTreeNode() : current_state_(), player_num_() {}
 
-  MonteCarloTreeNode(const GameState& state, const int player_num, std::function<GameAction(GameState&)> selectForPlayout = randomAction, const float epsilon = 0.0)
-      : current_state_(state), player_num_(player_num), selectForPlayout_(selectForPlayout), epsilon_(epsilon) {}
+  MonteCarloTreeNode(const GameState& state, const int player_num, const unsigned int random_seed = 0, const float epsilon = 0.0, std::function<GameAction(const GameState&)> selectForPlayout = firstAction)
+      : current_state_(state), player_num_(player_num), random_seed_(random_seed), selectForPlayout_(selectForPlayout), epsilon_(epsilon) {}
 
   /* 根用。クラスの外側から探索を指示されて最善手を返す。 */
   GameAction search() {
@@ -76,7 +76,8 @@ class MonteCarloTreeNode {
   std::vector<MonteCarloTreeNode> children_{}; // 子節点(あり得る局面の集合)。
   int play_cnt_{};                             // この節点を探索した回数。
   std::array<int, kNumberOfPlayers> sum_scores_{}; // この局面を通るプレイアウトで得られた各プレイヤの総得点。勝1点負0点制なら勝利数と一致する。
-  std::function<GameAction(GameState&)> selectForPlayout_{randomAction}; // ロールアウトポリシー。
+  unsigned int random_seed_;
+  std::function<GameAction(const GameState&)> selectForPlayout_; // ロールアウトポリシー。
   float epsilon_{};
 
   /* 節点用。子節点を再帰的に掘り進め、各プレイヤの得点を逆伝播。 */
@@ -152,7 +153,8 @@ class MonteCarloTreeNode {
     std::transform(actions.begin(), actions.end(), this->children_.begin(),
         [&](auto action) {
           GameState state{GameState(this->current_state_).next(action)};
-          return MonteCarloTreeNode(state, state.getMyPlayerNum(), selectForPlayout_, epsilon_);
+
+          return MonteCarloTreeNode(state, state.getMyPlayerNum(), random_seed_, epsilon_, selectForPlayout_);
         });
   }
 
@@ -190,20 +192,22 @@ class MonteCarloTreeNode {
   }
 
   /* 与えられた局面に対してランダムな着手を選択。 */
-  static const GameAction randomAction(const GameState& first_state) {
-    std::random_device seed_gen;
-    std::default_random_engine rand_engine(seed_gen());
-
+  GameAction randomAction(const GameState& first_state) {
+    std::default_random_engine rand_engine(random_seed_);
     std::vector<GameAction> actions{first_state.legalActions()};
     std::uniform_int_distribution<int> dist(0, actions.size() - 1);
 
     return actions.at(dist(rand_engine));
   }
 
+  static GameAction firstAction(const GameState& first_state) {
+    std::vector<GameAction> actions{first_state.legalActions()};
+    return actions.at(0);
+  }
+
   /* 確率kEpsilonでランダムな手を打つ。 */
   const GameAction epsilonGreedyAction(GameState& first_state) {
-    std::random_device seed_gen;
-    std::default_random_engine rand_engine(seed_gen());
+    std::default_random_engine rand_engine(random_seed_);
     std::uniform_real_distribution<float> dist(0.0, 1.0);
 
     if (dist(rand_engine) <= epsilon_) {
