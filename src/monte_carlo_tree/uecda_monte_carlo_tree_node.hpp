@@ -10,8 +10,7 @@
 
 template<>
 const uecda::Hand MonteCarloTreeNode<UECdaState, uecda::Hand, 5>::epsilonGreedyAction(UECdaState& first_state) {
-  std::random_device seed_gen;
-  std::default_random_engine rand_engine(seed_gen());
+  std::default_random_engine rand_engine(random_seed_);
   std::uniform_real_distribution<float> dist(0.0, 1.0);
 
   const uecda::Table table{first_state.getTable()};

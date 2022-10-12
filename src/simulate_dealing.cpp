@@ -1,8 +1,7 @@
 #include "simulate_dealing.hpp"
 
-void simulate_random_dealing(const int my_playernum, const uecda::Cards my_cards, std::array<uecda::Cards, 5>& player_cards, uecda::Cards rest_cards, const uecda::Table table) {
-  std::random_device seed_gen;
-  std::default_random_engine rand_engine(seed_gen());
+void simulate_random_dealing(const int my_playernum, const uecda::Cards my_cards, std::array<uecda::Cards, 5>& player_cards, uecda::Cards rest_cards, const uecda::Table table, const unsigned int random_seed) {
+  std::default_random_engine rand_engine(random_seed);
 
   std::array<int, 5> rest_quantity_of_not_dealt_cards{table.card_quantity_of_players};
 

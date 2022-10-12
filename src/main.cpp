@@ -24,7 +24,7 @@ Hand selectAsDefault(const UECdaState& state) {
   return select_hand(legal_hands, state.getTableHand(), state.getTable());
 }
 
-Hand selectHand(const int my_playernum, const UECdaState& state, const Cards& cards_of_opponents) {
+Hand selectHand(const int my_playernum, const UECdaState& state, const Cards& cards_of_opponents, const unsigned int random_seed) {
   const GameRecord record{state.getRecord()};
   const Cards my_cards{state.getPlayerCards().at(my_playernum)};
   const Table table{state.getTable()};
@@ -46,7 +46,7 @@ Hand selectHand(const int my_playernum, const UECdaState& state, const Cards& ca
   if (!submission_hand.getSummary().is_pass) { return submission_hand; }
 
   /* 必勝手がなければ、モンテカルロ木探索。 */
-  MonteCarloTreeNode<UECdaState, Hand, 5> mctnode = MonteCarloTreeNode<UECdaState, Hand, 5>(state, my_playernum, selectAsDefault, 1.0);
+  MonteCarloTreeNode<UECdaState, Hand, 5> mctnode = MonteCarloTreeNode<UECdaState, Hand, 5>(state, my_playernum, random_seed, 1.0, selectAsDefault);
   return mctnode.search();
 }
 
@@ -115,6 +115,10 @@ int main(int argc, char* argv[]) {
     Hand last_action {};
     Cards rest_cards = Cards::all();
 
+    /* 乱数のシード。相手の手番のときに更新する。 */
+    std::random_device seed_gen;
+    unsigned int random_seed{seed_gen()};
+
     /* トリックの繰り返し。 */
     while (!is_round_end) {
       /* 自分の手札を受け取る */
@@ -139,7 +143,7 @@ int main(int argc, char* argv[]) {
 
       /* プレイヤにカードを分配 */
       std::array<Cards, 5> player_cards;
-      simulate_random_dealing(my_playernum, my_cards, player_cards, rest_cards, table);
+      simulate_random_dealing(my_playernum, my_cards, player_cards, rest_cards, table, random_seed);
 
       /* ゲームの状態の更新 */
       for (int i = 0; i < 5; i++) {
@@ -167,7 +171,7 @@ int main(int argc, char* argv[]) {
 
       /* 着手 */
       if (table.is_my_turn) {
-        Hand submission_hand{selectHand(my_playernum, state, rest_cards)};
+        Hand submission_hand{selectHand(my_playernum, state, rest_cards, random_seed)};
 
         /* 提出用配列に着手を移す */
         common::CommunicationBody submission_body = {};
@@ -179,7 +183,8 @@ int main(int argc, char* argv[]) {
           std::cerr << "提出カードが受理されませんでした。" << std::endl;
         }
       } else {
-        /* 他プレイヤのターン時の行動を記述 */
+        /* 他プレイヤのターン。 */
+        random_seed = seed_gen(); // シード値を変える。
       }
 
       /* 前の場札を更新(パスなら現在の場札と同じ) */
