@@ -10,9 +10,6 @@
 
 template<>
 const uecda::Hand MonteCarloTreeNode<UECdaState, uecda::Hand, 5>::epsilonGreedyAction(UECdaState& first_state) {
-  std::default_random_engine rand_engine(random_seed_);
-  std::uniform_real_distribution<float> dist(0.0, 1.0);
-
   const uecda::Table table{first_state.getTable()};
   const GameRecord record{first_state.getRecord()};
   uecda::Cards cards_of_opponents{};
@@ -27,12 +24,14 @@ const uecda::Hand MonteCarloTreeNode<UECdaState, uecda::Hand, 5>::epsilonGreedyA
     return {};
   }
 
+  std::bernoulli_distribution dist(epsilon_);
+
   /* 必勝手探索。 */
   uecda::Hand submission_hand{searchWinningHand(first_state.getPlayerCards().at(table.whose_turn), table, record, first_state.getTableHand(), cards_of_opponents)};
   if (!submission_hand.getSummary().is_pass) { return submission_hand; }
 
   /* ロールアウトポリシーを使う。 */
-  if (dist(rand_engine) <= epsilon_) {
+  if (dist(random_engine_)) {
     return randomAction(first_state);
   } else {
     return selectForPlayout_(first_state);

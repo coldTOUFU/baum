@@ -8,6 +8,8 @@
 #include <random>
 #include <vector>
 
+#include "xorshift64.hpp"
+
 /* GameState: GameStateクラスを実装した型。 */
 /* GameAction: ゲームの着手を表現する型。 */
 template <class GameState, typename GameAction, int kNumberOfPlayers>
@@ -17,7 +19,7 @@ class MonteCarloTreeNode {
   MonteCarloTreeNode() : current_state_(), player_num_() {}
 
   MonteCarloTreeNode(const GameState& state, const int player_num, const unsigned int random_seed = 0, const float epsilon = 0.0, std::function<GameAction(const GameState&)> selectForPlayout = firstAction)
-      : current_state_(state), player_num_(player_num), random_seed_(random_seed), selectForPlayout_(selectForPlayout), epsilon_(epsilon) {}
+      : current_state_(state), player_num_(player_num), random_seed_(random_seed), random_engine_(random_seed_), selectForPlayout_(selectForPlayout), epsilon_(epsilon) {}
 
   /* 根用。クラスの外側から探索を指示されて最善手を返す。 */
   GameAction search() {
@@ -77,12 +79,13 @@ class MonteCarloTreeNode {
   int play_cnt_{};                             // この節点を探索した回数。
   std::array<int, kNumberOfPlayers> sum_scores_{}; // この局面を通るプレイアウトで得られた各プレイヤの総得点。勝1点負0点制なら勝利数と一致する。
   unsigned int random_seed_;
+  XorShift64 random_engine_;
   std::function<GameAction(const GameState&)> selectForPlayout_; // ロールアウトポリシー。
   float epsilon_{};
 
   /* 節点用。子節点を再帰的に掘り進め、各プレイヤの得点を逆伝播。 */
   std::array<int, kNumberOfPlayers> searchChild(int whole_play_cnt) {
-    this->play_cnt_++;
+    play_cnt_++;
 
     /* 既に勝敗がついていたら、結果を返す。 */
     if (this->current_state_.isFinished()) {
@@ -193,11 +196,10 @@ class MonteCarloTreeNode {
 
   /* 与えられた局面に対してランダムな着手を選択。 */
   GameAction randomAction(const GameState& first_state) {
-    std::default_random_engine rand_engine(random_seed_);
     std::vector<GameAction> actions{first_state.legalActions()};
     std::uniform_int_distribution<int> dist(0, actions.size() - 1);
 
-    return actions.at(dist(rand_engine));
+    return actions.at(dist(random_engine_));
   }
 
   static GameAction firstAction(const GameState& first_state) {
@@ -207,10 +209,9 @@ class MonteCarloTreeNode {
 
   /* 確率kEpsilonでランダムな手を打つ。 */
   const GameAction epsilonGreedyAction(GameState& first_state) {
-    std::default_random_engine rand_engine(random_seed_);
-    std::uniform_real_distribution<float> dist(0.0, 1.0);
+    std::bernoulli_distribution dist(epsilon_);
 
-    if (dist(rand_engine) <= epsilon_) {
+    if (dist(random_engine_)) {
       return randomAction(first_state);
     } else {
       return selectForPlayout_(first_state);
