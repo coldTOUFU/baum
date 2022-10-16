@@ -180,6 +180,9 @@ int main(int argc, char* argv[]) {
         /* カードを提出 */
         const bool is_submit_accepted = client.sendSubmissionCards(submission_body);
         if (!submission_hand.getSummary().is_pass && !is_submit_accepted) { // パスの場合も不受理判定になるので弾く。
+          std::cerr << table;
+          std::cerr << table_body;
+          std::cerr << submission_hand;
           std::cerr << "提出カードが受理されませんでした。" << std::endl;
         }
       } else {
