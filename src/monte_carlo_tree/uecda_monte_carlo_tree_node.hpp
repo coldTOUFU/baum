@@ -27,14 +27,14 @@ const uecda::Hand MonteCarloTreeNode<UECdaState, uecda::Hand, 5>::epsilonGreedyA
   std::bernoulli_distribution dist(epsilon_);
 
   /* 必勝手探索。 */
-  uecda::Hand submission_hand{searchWinningHand(first_state.getPlayerCards().at(table.whose_turn), table, record, first_state.getTableHand(), cards_of_opponents)};
-  if (!submission_hand.getSummary().is_pass) { return submission_hand; }
+  //uecda::Hand submission_hand{searchWinningHand(first_state.getPlayerCards().at(table.whose_turn), table, record, first_state.getTableHand(), cards_of_opponents)};
+  //if (!submission_hand.getSummary().is_pass) { return submission_hand; }
 
   /* ロールアウトポリシーを使う。 */
   if (dist(random_engine_)) {
-    return randomAction(first_state);
+    return randomAction(first_state, random_engine_);
   } else {
-    return selectForPlayout_(first_state);
+    return selectForPlayout_(first_state, random_engine_);
   }
 }
 
