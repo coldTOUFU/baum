@@ -9,20 +9,19 @@
 #include "uecda_cpp/table.hpp"
 #include "uecda_cpp/uecda_client.hpp"
 #include "uecda_cpp/uecda_common.hpp"
-#include "uecda_cpp/sample_client/select_hand.hpp"
+
 #include "monte_carlo_tree/monte_carlo_tree_node.hpp"
 #include "monte_carlo_tree/uecda_monte_carlo_tree_node.hpp"
+
 #include "game_record.hpp"
 #include "uecda_state.hpp"
 #include "search_winning_hand.hpp"
 #include "simulate_dealing.hpp"
 
-using namespace uecda;
+#include "default_playout_policy.hpp"
+#include "snowl_playout_policy.hpp"
 
-Hand selectAsDefault(const UECdaState& state) {
-  std::vector<uecda::Hand> legal_hands = state.legalActions();
-  return select_hand(legal_hands, state.getTableHand(), state.getTable());
-}
+using namespace uecda;
 
 Hand selectHand(const int my_playernum, const UECdaState& state, const Cards& cards_of_opponents, const unsigned int random_seed) {
   const GameRecord record{state.getRecord()};
@@ -46,7 +45,7 @@ Hand selectHand(const int my_playernum, const UECdaState& state, const Cards& ca
   if (!submission_hand.getSummary().is_pass) { return submission_hand; }
 
   /* 必勝手がなければ、モンテカルロ木探索。 */
-  MonteCarloTreeNode<UECdaState, Hand, 5> mctnode = MonteCarloTreeNode<UECdaState, Hand, 5>(state, my_playernum, random_seed, 1.0, selectAsDefault);
+  MonteCarloTreeNode<UECdaState, Hand, 5> mctnode = MonteCarloTreeNode<UECdaState, Hand, 5>(state, my_playernum, random_seed, 0.0, snowlPlayoutPolicy);
   return mctnode.search();
 }
 
@@ -55,7 +54,7 @@ int main(int argc, char* argv[]) {
   bool is_game_end = false;
 
   /* ゲームに参加 */
-  UECdaClient client = UECdaClient();
+  UECdaClient client{"baum"};
   const int my_playernum = client.enterGame();
 
   /* ラウンドの繰り返し */
