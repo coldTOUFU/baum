@@ -18,7 +18,7 @@ class MonteCarloTreeNode {
   /* このクラスをvectorで扱うために必要。 */
   MonteCarloTreeNode() : current_state_(), player_num_() {}
 
-  MonteCarloTreeNode(const GameState& state, const int player_num, const unsigned int random_seed = 0, const float epsilon = 0.0, std::function<GameAction(const GameState&)> selectForPlayout = firstAction)
+  MonteCarloTreeNode(const GameState& state, const int player_num, const unsigned int random_seed = 0, const float epsilon = 0.0, std::function<GameAction(const GameState&, XorShift64&)> selectForPlayout = randomAction)
       : current_state_(state), player_num_(player_num), random_seed_(random_seed), random_engine_(random_seed_), selectForPlayout_(selectForPlayout), epsilon_(epsilon) {}
 
   /* 根用。クラスの外側から探索を指示されて最善手を返す。 */
@@ -77,22 +77,24 @@ class MonteCarloTreeNode {
   int player_num_;                       // 自分のプレイヤ番号。
   std::vector<MonteCarloTreeNode> children_{}; // 子節点(あり得る局面の集合)。
   int play_cnt_{};                             // この節点を探索した回数。
-  std::array<int, kNumberOfPlayers> sum_scores_{}; // この局面を通るプレイアウトで得られた各プレイヤの総得点。勝1点負0点制なら勝利数と一致する。
+  std::array<double, kNumberOfPlayers> sum_scores_{}; // この局面を通るプレイアウトで得られた各プレイヤの総得点。勝1点負0点制なら勝利数と一致する。
+  std::array<double, kNumberOfPlayers> sum_scores_squared_{}; // この局面を通るプレイアウトで得られた各プレイヤの得点の二乗値の総和。
   unsigned int random_seed_;
   XorShift64 random_engine_;
-  std::function<GameAction(const GameState&)> selectForPlayout_; // ロールアウトポリシー。
+  std::function<GameAction(const GameState&, XorShift64&)> selectForPlayout_; // ロールアウトポリシー。
   float epsilon_{};
 
   /* 節点用。子節点を再帰的に掘り進め、各プレイヤの得点を逆伝播。 */
-  std::array<int, kNumberOfPlayers> searchChild(int whole_play_cnt) {
+  std::array<double, kNumberOfPlayers> searchChild(int whole_play_cnt) {
     play_cnt_++;
 
     /* 既に勝敗がついていたら、結果を返す。 */
     if (this->current_state_.isFinished()) {
-      std::array<int, kNumberOfPlayers> result{};
+      std::array<double, kNumberOfPlayers> result{};
       for (int i = 0; i < kNumberOfPlayers; i++) {
         result.at(i) = this->current_state_.getScore(i);
         sum_scores_.at(i) += result.at(i);
+        sum_scores_squared_.at(i) += result.at(i) * result.at(i);
       }
       return result;
     }
@@ -106,17 +108,19 @@ class MonteCarloTreeNode {
     /* 子供がいる場合は、選択して掘り進める。 */
     if (this->children_.size() > 0) {
       MonteCarloTreeNode<GameState, GameAction, kNumberOfPlayers>& child{this->selectChildToSearch(whole_play_cnt)};
-      std::array<int, kNumberOfPlayers> result{child.searchChild(whole_play_cnt)};
+      std::array<double, kNumberOfPlayers> result{child.searchChild(whole_play_cnt)};
       for (int i = 0; i < kNumberOfPlayers; i++) {
         sum_scores_.at(i) += result.at(i);
+        sum_scores_squared_.at(i) += result.at(i) * result.at(i);
       }
       return result;
     }
 
     /* 子供がいない場合は、プレイアウトの結果を返す。 */
-    std::array<int, kNumberOfPlayers> result{this->playout()};
+    std::array<double, kNumberOfPlayers> result{this->playout()};
     for (int i = 0; i < kNumberOfPlayers; i++) {
       sum_scores_.at(i) += result.at(i);
+      sum_scores_squared_.at(i) += result.at(i) * result.at(i);
     }
     return result;
   }
@@ -162,14 +166,14 @@ class MonteCarloTreeNode {
   }
 
   /* プレイアウトを実施し、結果を返す。 */
-  std::array<int, kNumberOfPlayers> playout() {
+  std::array<double, kNumberOfPlayers> playout() {
     GameState state{this->current_state_};
 
     while (!state.isFinished()) {
       state = state.next(epsilonGreedyAction(state));
     }
 
-    std::array<int, kNumberOfPlayers> result{};
+    std::array<double, kNumberOfPlayers> result{};
     for (int i = 0; i < kNumberOfPlayers; i++) {
       result.at(i) = state.getScore(i);
     }
@@ -179,7 +183,8 @@ class MonteCarloTreeNode {
 
   /* なんらかの方法でplayer_num目線での現在局面の評価値を計算して返す。 */
   double evaluate(int whole_play_cnt, int player_num) const {
-    return MonteCarloTreeNode::ucb1(whole_play_cnt, this->play_cnt_, this->sum_scores_.at(player_num));
+    // return MonteCarloTreeNode::ucb1(whole_play_cnt, this->play_cnt_, this->sum_scores_.at(player_num));
+    return MonteCarloTreeNode::ucb1Tuned(whole_play_cnt, this->play_cnt_, this->sum_scores_.at(player_num), this->sum_scores_squared_.at(player_num));
   }
 
   /* player_num目線での現在局面の平均得点を返す。勝ち点1負け点0のゲームなら勝率。 */
@@ -188,23 +193,26 @@ class MonteCarloTreeNode {
   }
 
   /* ucb1値を返す。 */
-  /* 得点制ゲームに対応するため、勝ち数の代わりに得点を用いている。オセロや将棋では勝ち1、負け0にすればよい。
-   */
+  /* 得点制ゲームに対応するため、勝ち数の代わりに得点を用いている。オセロや将棋では勝ち1、負け0にすればよい。 */
   static double ucb1(int whole_play_cnt, int play_cnt, int score) {
     return (play_cnt <= 0) ? kEvaluationMax : (double)score / play_cnt + std::sqrt(2.0 * std::log2(whole_play_cnt) / play_cnt);
   }
 
-  /* 与えられた局面に対してランダムな着手を選択。 */
-  GameAction randomAction(const GameState& first_state) {
-    std::vector<GameAction> actions{first_state.legalActions()};
-    std::uniform_int_distribution<int> dist(0, actions.size() - 1);
-
-    return actions.at(dist(random_engine_));
+  /* ucb1-tuned値を返す。 */
+  static double ucb1Tuned(int whole_play_cnt, int play_cnt, int score, int score_squared) {
+    const double mean = (double)score / play_cnt;
+    const double variance = score_squared - mean * mean;
+    const double v = variance + std::sqrt(2.0 * std::log2(whole_play_cnt) / play_cnt);
+    return (play_cnt <= 0) ? kEvaluationMax : (double)score / play_cnt + std::sqrt(std::log2(whole_play_cnt) / play_cnt * std::min(0.25, v));
   }
 
-  static GameAction firstAction(const GameState& first_state) {
+  /* 与えられた局面に対してランダムな着手を選択。 */
+  static GameAction randomAction(const GameState& first_state, XorShift64& random_engine) {
     std::vector<GameAction> actions{first_state.legalActions()};
-    return actions.at(0);
+    if (actions.size() == 1) { return actions.at(0); } // 一手しかないなら、それを出す。
+
+    std::uniform_int_distribution<int> dist(0, actions.size() - 1);
+    return actions.at(dist(random_engine));
   }
 
   /* 確率kEpsilonでランダムな手を打つ。 */
@@ -212,9 +220,9 @@ class MonteCarloTreeNode {
     std::bernoulli_distribution dist(epsilon_);
 
     if (dist(random_engine_)) {
-      return randomAction(first_state);
+      return randomAction(first_state, random_engine_);
     } else {
-      return selectForPlayout_(first_state);
+      return selectForPlayout_(first_state, random_engine_);
     }
   }
 };
