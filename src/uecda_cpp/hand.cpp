@@ -93,6 +93,28 @@ void uecda::Hand::pushLegalHands(const Cards& src, std::vector<Hand>& hand_vec, 
   }
 }
 
+void uecda::Hand::pushHandsWithoutOverlapInSameHandType(const Cards& src, std::vector<Hand>& hand_vec) {
+  Cards::bitcards src_bit_for_pair{src.toBitcards()};
+  Cards::bitcards src_bit_for_sequence{src.toBitcards()};
+  /* 手探索でフィルターにかけるとき邪魔なので、ジョーカーのビットを落とす。  */
+  src_bit_for_pair &= (Cards::bitcards)0xfffffffffffffff;
+  src_bit_for_sequence &= (Cards::bitcards)0xfffffffffffffff;
+
+  for (int pair_qty = 4; pair_qty >= 1; pair_qty--) {
+    Hand::pushPairAndTakeAwayFromSrc(src_bit_for_pair, hand_vec, pair_qty);
+  }
+  for (int seq_qty = 14; seq_qty >= 3; seq_qty--) {
+    Hand::pushSequenceAndTakeAwayFromSrc(src_bit_for_sequence, hand_vec, seq_qty);
+  }
+
+  /* ジョーカーがあればジョーカー1枚出しを追加。 */
+  if (src.hasJoker()) {
+    const Cards::bitcards c{};
+    const Cards::bitcards j{(Cards::bitcards)1};
+    hand_vec.push_back(Hand::bitcards2Hand(c, j));
+  }
+}
+
 void uecda::Hand::putCards(uecda::common::CommunicationBody& dst) const {
   Cards::bitcards src{cards_.toBitcards()};
   Cards::bitcards src_joker{joker_.toBitcards()};
@@ -245,6 +267,39 @@ void uecda::Hand::pushSequenceWithJoker(const Cards::bitcards src, std::vector<H
         const Cards::bitcards c{src & tmpfilter};
         const Cards::bitcards j{~src & tmpfilter};
         hand_vec.push_back(Hand::bitcards2Hand(c, j));
+      }
+    }
+  }
+}
+
+void uecda::Hand::pushPairAndTakeAwayFromSrc(Cards::bitcards& src, std::vector<Hand> &hand_vec, const int pair_qty) {
+  if (pair_qty < 1 || pair_qty > 4) { return; } // フィルターを定義していないseq_qtyが来たら何もしない。
+
+  /* 各フィルター(=スートの組み合わせ)に対し、各数字についてペアを探す。 */
+  for (int i = 0; i < Hand::kPairFilterSize.at(pair_qty - 1); i++) {
+    for (int j = 0; j < 15; j++){
+      const Cards::bitcards tmpfilter{Hand::kPairFilters.at(pair_qty - 1).at(i) << j};
+      if ((src & tmpfilter) == tmpfilter) {
+        const Cards::bitcards j{};
+        hand_vec.push_back(Hand::bitcards2Hand(tmpfilter, j));
+        src ^= tmpfilter; // srcから手を構成するカード(=tmpfilterと一致する部分)を除く。
+      }
+    }
+  }
+}
+
+void uecda::Hand::pushSequenceAndTakeAwayFromSrc(Cards::bitcards& src, std::vector<Hand> &hand_vec, const int seq_qty) {
+  if (seq_qty < 3 || seq_qty > 14) { return; } // フィルターを定義していないseq_qtyが来たら何もしない。
+
+  /* 各スートに対し、各数字に対して階段を探す。 */
+  for(int i = 0; i < 4; i++) {
+    for(int j = 0; j <= 15 - seq_qty; j++) {
+      /* filterを、i番目のスートでj番目から始めるものに適用できるようシフトする。 */
+      const Cards::bitcards tmpfilter{Hand::kSequenceFilters.at(seq_qty - 1) << (15 * i + j)};
+      if((src & tmpfilter) == tmpfilter) { 
+        const Cards::bitcards j{};
+        hand_vec.push_back(Hand::bitcards2Hand(tmpfilter, j));
+        src ^= tmpfilter; // srcから手を構成するカード(=tmpfilterと一致する部分)を除く。
       }
     }
   }

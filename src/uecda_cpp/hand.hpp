@@ -46,6 +46,10 @@ namespace uecda {
     /* 与えられたベクターに、与えられたカードから生成できる合法手をすべて追加する。パスは除く。 */
     static void pushLegalHands(const Cards& src, std::vector<Hand>& hand_vec, const Table& table, const Hand& table_hand);
 
+    /* 与えられたベクターに、与えられたカードから生成できる合法手を追加する。パスは除く。 */
+    /* ただし、階段同士、枚数組同士の範疇で含まれるカードがダブらないようにする。 */
+    static void pushHandsWithoutOverlapInSameHandType(const Cards& src, std::vector<Hand>& hand_vec);
+
     /* ジョーカー以外のカードを返す。 */
     constexpr Cards getCards() const { return cards_; }
 
@@ -114,6 +118,12 @@ namespace uecda {
 
     /* ジョーカー必ず込みで与えられた配列に指定された枚数の階段を作る。 */
     static void pushSequenceWithJoker(const Cards::bitcards src, std::vector<Hand>& hand_vec, const int seq_qty);
+
+    /* ジョーカーなしで与えられた配列に指定された枚数の枚数組を作る。ただし枚数組ができるたびにsrcの該当するカードを削除する。 */
+    static void pushPairAndTakeAwayFromSrc(Cards::bitcards& src, std::vector<Hand> &hand_vec, const int pair_qty);
+ 
+    /* ジョーカーなしで与えられた配列に指定された枚数の階段を作る。ただし階段ができるたびにsrcの該当するカードを削除する。 */
+    static void pushSequenceAndTakeAwayFromSrc(Cards::bitcards& src, std::vector<Hand> &hand_vec, const int seq_qty);
 
     friend std::ostream& operator<<(std::ostream& os, const Hand& src) {
       common::CommunicationBody body{};
