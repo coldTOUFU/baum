@@ -1,3 +1,6 @@
+#ifndef XOR_SHIFT_64_HPP_
+#define XOR_SHIFT_64_HPP_
+
 #include <cstdint>
 #include <time.h>
 
@@ -27,3 +30,5 @@ class XorShift64 {
  private:
   result_type a_;
 };
+
+#endif // XOR_SHIFT_64_HPP_
