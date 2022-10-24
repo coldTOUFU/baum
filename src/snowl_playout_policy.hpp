@@ -10,16 +10,7 @@
 
 #include "monte_carlo_tree/xorshift64.hpp"
 #include "uecda_state.hpp"
-
-/* ビットカード表現の強さを数値に変換する(3の強さを1とし、2の強さを13とする)。 */
-int card_order2int(uecda::Cards::card_order card_order) {
-  int result_reversed{}; // 14 - result。
-  while (card_order != 0) {
-    card_order >>= 1;
-    result_reversed++;
-  }
-  return 15 - result_reversed;
-}
+#include "snowl_playout_utils.hpp"
 
 /* snowlで`params`として定義されている、ロールアウトポリシー用のパラメータ。 */
 /* 各手に対してスート無視の1対1対応で値が定義されている。 */
@@ -70,7 +61,7 @@ constexpr std::array<double, 166> snowl_params = {{
    0.848130302, // ジョーカー
 }};
 
-uecda::Hand snowlPlayoutPolicy(const UECdaState& state, XorShift64& random_engine) {
+uecda::Hand snowlPlayoutPolicy(const UECdaState& state, XorShift64& random_engine, SnowlPolicyVector weights = snowl_params) {
   const int my_playernum{state.getTable().whose_turn};
   const uecda::Table table{state.getTable()};
   const uecda::Cards my_cards{state.getPlayerCards().at(my_playernum)};
@@ -86,44 +77,11 @@ uecda::Hand snowlPlayoutPolicy(const UECdaState& state, XorShift64& random_engin
   double evaluations_sum{};
   for (unsigned int i = 0; i < legal_hands.size(); i++) {
     const uecda::HandSummary summary{legal_hands.at(i).getSummary()};
-    const bool can_revolute = (!summary.is_sequence && summary.quantity >= 4) || (summary.is_sequence && summary.quantity >= 5);
 
     /* 今見ている手で上がれるならそれを出す。 */
-    if (summary.quantity == my_cards_quantity) { return legal_hands.at(i); }
+    if (legal_hands.at(i).getSummary().quantity == my_cards_quantity) { return legal_hands.at(i); }
 
-    /* legal_handを出した後に構成できる手の集合。 */
-    /* 集合においては、同じ手の型で重複するカードがないように最大の手のみを作る。これはほぼsnowlの仕様。 */
-    const uecda::Cards rest_cards{my_cards - legal_hands.at(i).getWholeBitcards()};
-    std::vector<uecda::Hand> rest_hands{};
-    uecda::Hand::pushHandsWithoutOverlapInSameHandType(rest_cards, rest_hands);
-
-    /* legal_handを出した後に構成できる手のそれぞれに対する評価値の総和をlegal_handの評価値とする。 */
-    for (const uecda::Hand rest_hand : rest_hands) {
-      const uecda::HandSummary rest_summary{rest_hand.getSummary()};
-      int idx{}; // snowl_paramsの対応する添字。
-      idx += (table.is_rev ^ can_revolute) ? 83 : 0; // 革命なら、革命用のパラメータの位置まで飛ばす。
-      if (!rest_summary.is_sequence) {
-        /* Hand::pushHandsWithoutOverlapInSameHandType()はジョーカーを1枚出しとしてのみ生成するので、
-           ジョーカー1枚出しの場合とジョーカーなしの枚数組とで分ければよい。 */
-        if (rest_summary.has_joker) {
-          idx += 82;
-        } else {
-          idx += 30;
-          idx += 4 * (card_order2int(rest_summary.weakest_order) - 1);
-          idx += rest_summary.quantity - 1;
-        }
-      } else {
-        /* 5枚より多い階段もすべて5枚の階段として扱う。 */
-        if (rest_summary.quantity == 3) {
-          idx += 19;
-        } else if (rest_summary.quantity == 4) {
-          idx += 9;
-        }
-        idx += card_order2int(rest_summary.weakest_order) - 1;
-      }
-      evaluations.at(i) += snowl_params.at(idx);
-    }
-    evaluations.at(i) = exp(evaluations.at(i));
+    evaluations.at(i) = exp(snowlEvaluation(my_cards, legal_hands.at(i), table.is_rev, weights));
     evaluations_sum += evaluations.at(i);
   }
 

@@ -1,8 +1,9 @@
+#include <fstream>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 #include <string.h>
-
-#include <iostream>
 
 #include "uecda_cpp/cards.hpp"
 #include "uecda_cpp/hand.hpp"
@@ -45,11 +46,88 @@ Hand selectHand(const int my_playernum, const UECdaState& state, const Cards& ca
   if (!submission_hand.getSummary().is_pass) { return submission_hand; }
 
   /* 必勝手がなければ、モンテカルロ木探索。 */
-  MonteCarloTreeNode<UECdaState, Hand, 5> mctnode = MonteCarloTreeNode<UECdaState, Hand, 5>(state, my_playernum, random_seed, 0.0, snowlPlayoutPolicy);
+  std::function<Hand(const UECdaState&, XorShift64&)> playoutPolicy = [](const UECdaState& s, XorShift64& r) { return snowlPlayoutPolicy(s, r); };
+  MonteCarloTreeNode<UECdaState, Hand, 5> mctnode = MonteCarloTreeNode<UECdaState, Hand, 5>(state, my_playernum, random_seed, 1.0, playoutPolicy);
   return mctnode.search();
 }
 
+void writeLog(UECdaState& state, std::ofstream& fstream) {
+  fstream << state.getRecord().last_submitted_player << std::endl;
+  for (int i = 0; i < 5; i++) {
+    fstream << state.getRecord().has_passed.at(i);
+    if (i < 4) {
+      fstream << "\t";
+    }
+  }
+  fstream << std::endl;
+          
+  fstream << state.getTableHand().getCards().toBitcards() << "\t" << state.getTableHand().getJoker().toBitcards() << std::endl;
+
+  fstream << state.getTable().is_my_turn << std::endl;
+  fstream << state.getTable().whose_turn << std::endl;
+  fstream << state.getTable().is_start_of_trick << std::endl;
+  fstream << state.getTable().is_rev << std::endl;
+  fstream << state.getTable().is_lock << std::endl;
+  for (int i = 0; i < 5; i++) {
+    fstream << state.getTable().card_quantity_of_players.at(i);
+    if (i < 4) {
+      fstream << "\t";
+    }
+  }
+  fstream << std::endl;
+  for (int i = 0; i < 5; i++) {
+    fstream << state.getTable().is_out.at(i);
+    if (i < 4) {
+      fstream << "\t";
+    }
+  }
+  fstream << std::endl;
+  for (int i = 0; i < 5; i++) {
+    fstream << state.getTable().rank_of_players.at(i);
+    if (i < 4) {
+      fstream << "\t";
+    }
+  }
+  fstream << std::endl;
+  for (int i = 0; i < 5; i++) {
+    fstream << state.getTable().player_num_on_seats.at(i);
+    if (i < 4) {
+      fstream << "\t";
+    }
+  }
+  fstream << std::endl;
+
+  for (int i = 0; i < 5; i++) {
+    fstream << state.getPlayerCards().at(i).toBitcards();
+    if (i < 4) {
+      fstream << "\t";
+    }
+  }
+  fstream << std::endl;
+
+  for (int i = 0; i < 5; i++) {
+    fstream << state.getNextRanks().at(i);
+    if (i < 4) {
+      fstream << "\t";
+    }
+  }
+  fstream << std::endl;
+
+  fstream << state.getLastAction().getCards().toBitcards() << "\t" << state.getLastAction().getJoker().toBitcards() << std::endl;
+}
+
 int main(int argc, char* argv[]) {
+  bool is_collect_mode = false;
+  std::ofstream fstream;
+  if (argc > 1) {
+    std::string arg1 = argv[1];
+    /* stateのlogを保存。 */
+    if (arg1 == "--write-learning-log") {
+      fstream.open("state_log.tsv", std::ios::out);
+      is_collect_mode = true;
+    }
+  }
+
   bool is_round_end = false;
   bool is_game_end = false;
 
@@ -170,6 +248,11 @@ int main(int argc, char* argv[]) {
 
       /* 着手 */
       if (table.is_my_turn) {
+        /* 方策の学習用にstateを保存しておく。 */
+        if (is_collect_mode) {
+          writeLog(state, fstream);
+        }
+
         Hand submission_hand{selectHand(my_playernum, state, rest_cards, random_seed)};
 
         /* 提出用配列に着手を移す */
@@ -214,5 +297,8 @@ int main(int argc, char* argv[]) {
   }
 
   client.exitGame();
+  if (is_collect_mode) {
+    fstream.close();
+  }
   return 0;
 }

@@ -2,6 +2,7 @@
 *.code-workspace
 *.o
 *.log
+*.tsv
 
 tmp/
 external/tndhm_devkit_c-20180826/
@@ -10,5 +11,6 @@ external/FujiGokoroUECda/
 out/main
 test/out/search_winning_hand_test
 test/out/uecda_state_test
+learn/out/learn_playout_policy
 
 !.gitkeep
