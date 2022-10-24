@@ -30,16 +30,16 @@ namespace uecda {
 
     /* 実戦でのサーバからの通信処理用。 */
     Table(uecda::common::CommunicationBody& src) {
-      this->is_my_turn = src.at(5).at(2);
-      this->whose_turn = src.at(5).at(3);
-      this->is_start_of_trick = src.at(5).at(4);
-      this->is_rev = src.at(5).at(6);
-      this->is_lock = src.at(5).at(7);
+      is_my_turn = src.at(5).at(2);
+      whose_turn = src.at(5).at(3);
+      is_start_of_trick = src.at(5).at(4);
+      is_rev = src.at(5).at(6);
+      is_lock = src.at(5).at(7);
       for (int i = 0; i < 5; i++) {
-        this->card_quantity_of_players.at(i) = src.at(6).at(i);
-        this->is_out.at(i) = this->card_quantity_of_players.at(i) == 0;
-        this->rank_of_players.at(i) = src.at(6).at(5 + i);
-        this->player_num_on_seats.at(i) = src.at(6).at(10 + i);
+        card_quantity_of_players.at(i) = src.at(6).at(i);
+        is_out.at(i) = card_quantity_of_players.at(i) == 0;
+        rank_of_players.at(i) = src.at(6).at(5 + i);
+        player_num_on_seats.at(i) = src.at(6).at(10 + i);
       }
     }
 

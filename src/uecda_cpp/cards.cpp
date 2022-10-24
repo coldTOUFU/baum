@@ -1,30 +1,31 @@
 #include "cards.hpp"
 
-uecda::Cards::Cards(const uecda::common::CommunicationBody& src) {
-  this->cards_ = 0;
+uecda::Cards uecda::Cards::communicationBody2Cards(const uecda::common::CommunicationBody& src) {
+  bitcards cards{};
 
   /* Joker。 */
   if (src.at(4).at(1) == 2) {
-    this->cards_++;
+    cards++;
   }
-  this->cards_ <<= 1;
+  cards <<= 1;
 
   /* Joker以外の各札。 */
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 15; j++) {
       if (src.at(i).at(j) == 1) {
-        this->cards_++;
+        cards++;
       }
-      this->cards_ <<= 1;
+      cards <<= 1;
     }
   }
 
   /* 上で余計に1回左シフトした分を戻す。 */
-  this->cards_ >>= 1;
+  cards >>= 1;
+  return cards;
 }
 
 int uecda::Cards::getSuits() const {
-  bitcards tmp{this->cards_};
+  bitcards tmp{cards_};
   tmp &= (bitcards)0xfffffffffffffff; // Jokerをビット列から落とす。
 
   int s{0};
@@ -40,7 +41,7 @@ int uecda::Cards::getSuits() const {
 }
 
 int uecda::Cards::quantity() const {
-  return this->count(this->cards_);
+  return this->count(cards_);
 }
 
 int uecda::Cards::count(const bitcards src) {
@@ -66,8 +67,8 @@ int uecda::Cards::count(const bitcards src) {
   return (tmp & 0x00000000ffffffff) + (tmp >> 32 & 0x00000000ffffffff); // 64bits。
 }
 
-uecda::Cards::bitcards uecda::Cards::weakestOrder() const {
-  bitcards tmp{this->cards_};
+uecda::Cards::card_order uecda::Cards::weakestOrder() const {
+  bitcards tmp{cards_};
   tmp &= (bitcards)0xfffffffffffffff; // Jokerをビット列から落とす。
 
   /*
@@ -87,11 +88,11 @@ uecda::Cards::bitcards uecda::Cards::weakestOrder() const {
   /* 一番左の1以外を落とす。 */
   tmp ^= (tmp >> 1);
 
-  return tmp;
+  return (card_order)tmp;
 }
 
-uecda::Cards::bitcards uecda::Cards::strongestOrder() const {
-  bitcards tmp{this->cards_};
+uecda::Cards::card_order uecda::Cards::strongestOrder() const {
+  bitcards tmp{cards_};
   tmp &= (bitcards)0xfffffffffffffff; // Jokerをビット列から落とす。
 
   /*
@@ -103,11 +104,11 @@ uecda::Cards::bitcards uecda::Cards::strongestOrder() const {
   tmp = (tmp | (tmp >> 15) | (tmp >> 30) | (tmp >> 45)) & (0xffff >> 1);
 
   /* 一番右のbitだけ立てて返す。 */
-  return tmp & (-tmp);
+  return (card_order)(tmp & (-tmp));
 }
 
 void uecda::Cards::putCards(uecda::common::CommunicationBody &dst) const {
-  bitcards src{this->cards_};
+  bitcards src{cards_};
 
   /* Joker以外の各札。 */
   for (int i = 3; i >= 0; i--) {

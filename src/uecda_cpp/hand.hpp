@@ -14,22 +14,31 @@ namespace uecda {
   class Hand {
    public:
     /* 空の手 = パス */
-    Hand(): cards_(), joker_(), summary_(Hand::summarize({}, {})) {};
-
-    /* 配列形式のカードから手を生成。 */
-    Hand(const uecda::common::CommunicationBody& src): cards_(Hand::createCards(src)), joker_(Hand::createJoker(src)), summary_(Hand::summarize(cards_.toBitcards(), joker_.toBitcards())) {};
+    constexpr Hand(): cards_(), joker_(), summary_() {}
 
     /* ビットカードから手を生成。 */
-    Hand(const Cards::bitcards src, const Cards::bitcards joker_src): cards_(Cards(src)), joker_(Cards(joker_src)), summary_(summarize(src, joker_src)) {};
+    constexpr Hand(const Cards::bitcards src, const Cards::bitcards joker_src, const HandSummary hs): cards_(Cards(src)), joker_(Cards(joker_src)), summary_(hs) {}
 
     /* コピー。 */
-    Hand(const uecda::Hand& src): cards_(src.cards_), joker_(src.joker_), summary_(src.summary_) {};
+    constexpr Hand(const uecda::Hand& src) = default;
 
     /* 与えられた状況に対して合法手か？ */
     bool isLegal(const Table& tbl, const Hand& table_hand) const;
 
     /* 手のサマリを返す。 */
-    HandSummary getSummary() const { return this->summary_; }
+    constexpr HandSummary getSummary() const { return summary_; }
+
+    /* 通常カードとジョーカーのビット表現から手を生成。 */
+    static Hand bitcards2Hand(Cards::bitcards c, Cards::bitcards j) {
+      return Hand(c, j, Hand::summarize(c, j));
+    }
+
+    /* 通信配列から手を生成。 */
+    static Hand communicationBody2Hand(common::CommunicationBody src) {
+      const Cards::bitcards c{createCards(src).toBitcards()};
+      const Cards::bitcards j{createJoker(src).toBitcards()};
+      return Hand::bitcards2Hand(c, j);
+    }
 
     /* 与えられたベクターに、与えられたカードから生成できる手をすべて追加する。パスは除く。 */
     static void pushHands(const Cards& src, std::vector<Hand>& hand_vec);
@@ -37,48 +46,42 @@ namespace uecda {
     /* 与えられたベクターに、与えられたカードから生成できる合法手をすべて追加する。パスは除く。 */
     static void pushLegalHands(const Cards& src, std::vector<Hand>& hand_vec, const Table& table, const Hand& table_hand);
 
+    /* 与えられたベクターに、与えられたカードから生成できる合法手を追加する。パスは除く。 */
+    /* ただし、階段同士、枚数組同士の範疇で含まれるカードがダブらないようにする。 */
+    static void pushHandsWithoutOverlapInSameHandType(const Cards& src, std::vector<Hand>& hand_vec);
+
     /* ジョーカー以外のカードを返す。 */
-    Cards getCards() const {
-      return this->cards_;
-    }
+    constexpr Cards getCards() const { return cards_; }
 
     /* ジョーカーを返す。 */
-    Cards getJoker() const {
-      return this->joker_;
-    }
+    constexpr Cards getJoker() const { return joker_; }
 
     /* ジョーカーを含むカードを返す。ジョーカーの位置は特定できない。 */
-    Cards getWholeBitcards() const {
-      return this->cards_ + this->joker_;
-    }
+    constexpr Cards getWholeBitcards() const { return cards_ + joker_; }
 
     /* 革命を起こせる？ */
-    constexpr bool canRevolute() const {
-      return summary_.is_sequence ? summary_.quantity >= 5 : summary_.quantity >= 4;
-    }
+    constexpr bool canRevolute() const { return summary_.is_sequence ? summary_.quantity >= 5 : summary_.quantity >= 4; }
 
     /* 与えられた配列に手の構成カードを置く。 */
     void putCards(uecda::common::CommunicationBody& dst) const;
 
     /* デバッグ用に手を出力。 */
-    void print() const {
-      std::cout << *this;
+    void print() const { std::cout << *this; }
+
+    constexpr bool operator ==(const Hand& src) const { return cards_ == src.cards_ && joker_ == src.joker_ && summary_ == src.summary_; }
+
+    /* cards1がcards2より強い？ */
+    /* 強さの判定は階段の強さ判定に準じる。一方が空の場合とcards1とcards2の強さの範囲が被った場合は、強くも弱くもない、とする。 */
+    constexpr static bool isFormerStronger(const bool is_rev, const Cards& cards1, const Cards& cards2) {
+      return (!is_rev && !cards1.isEmpty() && !cards2.isEmpty() && cards1.weakestOrder() < cards2.strongestOrder()) ||
+          (is_rev && !cards1.isEmpty() && !cards2.isEmpty() && cards1.strongestOrder() > cards2.weakestOrder());
     }
 
-    bool operator ==(const Hand& src) const {
-      return cards_ == src.cards_ && joker_ == src.joker_ && summary_ == src.summary_;
-    }
-
-    /* order1がorder2より強い？ */
-    constexpr static bool isFormerStronger(bool is_rev, Cards::bitcards order1, Cards::bitcards order2) {
-      /* orderは15bit整数で、(革命でない場合)小さいほど強い。 */
-      return (!is_rev && order1 < order2) || (is_rev && order1 > order2);
-    }
-
-    /* order1がorder2より弱い？ */
-    constexpr static bool isFormerWeaker(bool is_rev, Cards::bitcards order1, Cards::bitcards order2) {
-      /* orderは15bit整数で、(革命でない場合)大きいほど弱い。 */
-      return (!is_rev && order1 > order2) || (is_rev && order1 < order2);
+    /* cards1がcards2より弱い？ */
+    /* 強さの判定は階段の強さ判定に準じる。一方が空の場合とcards1とcards2の強さの範囲が被った場合は、強くも弱くもない、とする。 */
+    constexpr static bool isFormerWeaker(const bool is_rev, const Cards& cards1, const Cards& cards2) {
+      return (!is_rev && !cards1.isEmpty() && !cards2.isEmpty() && cards1.strongestOrder() > cards2.weakestOrder()) ||
+          (is_rev && !cards1.isEmpty() && !cards2.isEmpty() && cards1.weakestOrder() < cards2.strongestOrder());
     }
 
    private:
@@ -115,6 +118,12 @@ namespace uecda {
 
     /* ジョーカー必ず込みで与えられた配列に指定された枚数の階段を作る。 */
     static void pushSequenceWithJoker(const Cards::bitcards src, std::vector<Hand>& hand_vec, const int seq_qty);
+
+    /* ジョーカーなしで与えられた配列に指定された枚数の枚数組を作る。ただし枚数組ができるたびにsrcの該当するカードを削除する。 */
+    static void pushPairAndTakeAwayFromSrc(Cards::bitcards& src, std::vector<Hand> &hand_vec, const int pair_qty);
+ 
+    /* ジョーカーなしで与えられた配列に指定された枚数の階段を作る。ただし階段ができるたびにsrcの該当するカードを削除する。 */
+    static void pushSequenceAndTakeAwayFromSrc(Cards::bitcards& src, std::vector<Hand> &hand_vec, const int seq_qty);
 
     friend std::ostream& operator<<(std::ostream& os, const Hand& src) {
       common::CommunicationBody body{};

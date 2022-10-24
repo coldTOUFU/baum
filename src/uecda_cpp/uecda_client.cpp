@@ -1,7 +1,7 @@
 #include "uecda_client.hpp"
 
 const std::string uecda::UECdaClient::kDefaultServerHostname = "127.0.0.1";
-const std::string uecda::UECdaClient::kDefaultPlayerName = "baum";
+const std::string uecda::UECdaClient::kDefaultPlayerName = "sample";
 
 int uecda::UECdaClient::enterGame(void) {
   /* サーバと接続する。 */
@@ -16,7 +16,7 @@ int uecda::UECdaClient::enterGame(void) {
 
   /* 自身のプレイヤ番号をサーバから受け取る。 */
   int my_playernum;
-  if (read(this->sockfd_, &my_playernum, sizeof(my_playernum)) > 0) {
+  if (read(sockfd_, &my_playernum, sizeof(my_playernum)) > 0) {
     my_playernum = ntohl(my_playernum);
   } else {
     throw ReceivePlayerNumException();
@@ -61,7 +61,7 @@ bool uecda::UECdaClient::sendSubmissionCards(const uecda::common::CommunicationB
   }
 
   int is_accepted;
-  if ((read(this->sockfd_, &is_accepted, sizeof(is_accepted))) <= 0) {
+  if ((read(sockfd_, &is_accepted, sizeof(is_accepted))) <= 0) {
     throw ReceiveAcceptedFlagException();
   }
 
@@ -71,7 +71,7 @@ bool uecda::UECdaClient::sendSubmissionCards(const uecda::common::CommunicationB
 uecda::UECdaClient::GAME_FINISH_STATE uecda::UECdaClient::receiveGameFinishState(void) const {
   int flag;
   /* ゲーム終了に関する情報を受け取る。 */
-  if ((read(this->sockfd_, &flag, sizeof(flag))) <= 0) {
+  if ((read(sockfd_, &flag, sizeof(flag))) <= 0) {
     std::cerr << "ゲームの終了判定を受け取れませんでした。\n";
     throw ReceiveGameFinishStateException();
   }
@@ -101,7 +101,7 @@ void uecda::UECdaClient::receiveTableCards(uecda::common::CommunicationBody& dst
 
 void uecda::UECdaClient::receiveCommunicationBody(uecda::common::CommunicationBody& dst_table) const {
   uecda::common::CommunicationBody src_table{};
-  if (read(this->sockfd_, &src_table, sizeof(src_table)) <= 0) {
+  if (read(sockfd_, &src_table, sizeof(src_table)) <= 0) {
     throw ReceiveCommunicationBodyException();
   }
 
@@ -123,38 +123,38 @@ void uecda::UECdaClient::sendCommunicationBody(const uecda::common::Communicatio
       dst_table.at(i).at(j) = htonl(src_table.at(i).at(j));
     }
   }
-  if (write(this->sockfd_, &dst_table, sizeof(dst_table)) <= 0) {
+  if (write(sockfd_, &dst_table, sizeof(dst_table)) <= 0) {
     throw SendCommunicationBodyException();
   }
 }
 
 void uecda::UECdaClient::openSocket() {
-  const char* server_addr{this->server_hostname_.c_str()};
+  const char* server_addr{server_hostname_.c_str()};
 
   /* ソケット生成。 */
-  if ((this->sockfd_ = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+  if ((sockfd_ = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
     std::cerr << "ソケット生成に失敗しました: " << std::endl;
     throw OpenSocketException();
   }
 
   /* ポートとアドレスの設定。 */
-  bzero((char*)&(this->client_addr_), sizeof(this->client_addr_));
-  this->client_addr_.sin_family = PF_INET;
-  this->client_addr_.sin_port = htons(this->port_);
-  this->client_addr_.sin_addr.s_addr = inet_addr(server_addr);
+  bzero((char*)&(client_addr_), sizeof(client_addr_));
+  client_addr_.sin_family = PF_INET;
+  client_addr_.sin_port = htons(port_);
+  client_addr_.sin_addr.s_addr = inet_addr(server_addr);
 
   /* IPアドレスで指定されていないとき、ホスト名の解決を試みる。 */
-  if (this->client_addr_.sin_addr.s_addr == 0xffffffff) {
-    struct hostent* host{gethostbyname(this->server_hostname_.c_str())};
+  if (client_addr_.sin_addr.s_addr == 0xffffffff) {
+    struct hostent* host{gethostbyname(server_hostname_.c_str())};
     if (host == NULL) {
       std::cerr << "ホスト名解決に失敗しました: " << server_addr << std::endl;
       throw ResolveServerException();
     }
-    this->client_addr_.sin_addr.s_addr = *(unsigned int*)host->h_addr_list[0];
+    client_addr_.sin_addr.s_addr = *(unsigned int*)host->h_addr_list[0];
   }
 
   /* サーバに接続する。 */
-  if (connect(this->sockfd_, (struct sockaddr*)&(this->client_addr_), sizeof(this->client_addr_)) != 0) {
+  if (connect(sockfd_, (struct sockaddr*)&(client_addr_), sizeof(client_addr_)) != 0) {
     std::cerr << "サーバ接続に失敗しました: " << server_addr << std::endl;
     throw ConnectToServerException();
   }
@@ -164,7 +164,7 @@ void uecda::UECdaClient::openSocket() {
 void uecda::UECdaClient::sendClientProfile() const {
   uecda::common::CommunicationBody profile{UECdaClient::kProtocolVersion};
 
-  std::copy(this->player_name_.begin(), this->player_name_.end(), profile.at(1).begin());
+  std::copy(player_name_.begin(), player_name_.end(), profile.at(1).begin());
 
   try {
     sendCommunicationBody(profile);

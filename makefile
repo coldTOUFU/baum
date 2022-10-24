@@ -34,5 +34,17 @@ $(TEST_OUTDIR)/uecda_state_test:	$(TEST_SRCDIR)/uecda_state_test.cpp $(OBJDIR)/u
 $(TEST_OUTDIR)/search_winning_hand_test:	$(TEST_SRCDIR)/search_winning_hand_test.cpp $(OBJDIR)/uecda_cpp/hand.o $(OBJDIR)/uecda_cpp/cards.o $(OBJDIR)/uecda_state.o $(OBJDIR)/search_winning_hand.o
 	$(CC) $(TEST_CFLAGS) -o $@ $^
 
+LEARNDIR 		= learn
+LEARN_SRCDIR	= $(LEARNDIR)/src
+LEARN_OUTDIR	= $(LEARNDIR)/out
+LEARN_SRCS		= $(wildcard $(LEARN_SRCDIR)/*.cpp)
+LEARN_TARGETS	= $(subst $(LEARN_SRCDIR), $(LEARN_OUTDIR), $(LEARN_SRCS:.cpp=))
+LEARN_CFLAGS	= -std=c++17 -Wall -O2
+
+learn: $(LEARN_TARGETS)
+
+$(LEARN_OUTDIR)/learn_playout_policy:	$(LEARN_SRCDIR)/learn_playout_policy.cpp $(OBJDIR)/uecda_state.o $(OBJDIR)/uecda_cpp/hand.o $(OBJDIR)/uecda_cpp/cards.o
+	$(CC) $(LEARN_CFLAGS) -o $@ $^
+
 clean:
 	rm -f ./out/main ./out/obj/**/*.o ./out/obj/*.o ./test/out/uecda_state_test

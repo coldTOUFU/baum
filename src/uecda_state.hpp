@@ -64,11 +64,11 @@ class UECdaState {
   }
 
   /* 指定されたプレイヤ番号の現時点での得点を返す。上がっていなければ0。 */
-  int getScore(const int player_num) const {
+  double getScore(const int player_num) const {
     if (next_ranks_.at(player_num) < 0) {
-      return 0;
+      return 0.0;
     } else {
-      return 5 - next_ranks_.at(player_num);
+      return (5.0 - next_ranks_.at(player_num)) / 5.0;
     }
   }
 

@@ -11,16 +11,21 @@ namespace uecda {
     int quantity;
     bool is_pass;
     bool is_sequence;
-    Cards::bitcards weakest_order;
-    Cards::bitcards strongest_order;
+    Cards::card_order weakest_order;
+    Cards::card_order strongest_order;
     bool has_joker;
     int suits;
+
+    constexpr HandSummary() : quantity(), is_pass(true), is_sequence(), weakest_order(), strongest_order(), has_joker(), suits() {}
+
+    constexpr HandSummary(int q, bool is_p, bool is_s, Cards::card_order w_ord, Cards::card_order s_ord, bool has_j, int s) :
+        quantity(q), is_pass(is_p), is_sequence(is_s), weakest_order(w_ord), strongest_order(s_ord), has_joker(has_j), suits(s) {}
 
     void print() const {
       std::cout << *this;
     }
 
-    bool operator ==(const HandSummary &src) const {
+    constexpr bool operator ==(const HandSummary &src) const {
       return quantity == src.quantity &&
           is_pass == src.is_pass &&
           is_sequence == src.is_sequence &&
