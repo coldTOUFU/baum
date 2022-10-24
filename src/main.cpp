@@ -46,8 +46,9 @@ Hand selectHand(const int my_playernum, const UECdaState& state, const Cards& ca
   if (!submission_hand.getSummary().is_pass) { return submission_hand; }
 
   /* 必勝手がなければ、モンテカルロ木探索。 */
-  std::function<Hand(const UECdaState&, XorShift64&)> playoutPolicy = [](const UECdaState& s, XorShift64& r) { return snowlPlayoutPolicy(s, r); };
-  MonteCarloTreeNode<UECdaState, Hand, 5> mctnode = MonteCarloTreeNode<UECdaState, Hand, 5>(state, my_playernum, random_seed, 1.0, playoutPolicy);
+  // std::function<Hand(const UECdaState&, XorShift64&)> playoutPolicy = [](const UECdaState& s, XorShift64& r) { return snowlPlayoutPolicy(s, r); };
+  // MonteCarloTreeNode<UECdaState, Hand, 5> mctnode = MonteCarloTreeNode<UECdaState, Hand, 5>(state, my_playernum, random_seed, 1.0, playoutPolicy);
+  MonteCarloTreeNode<UECdaState, Hand, 5> mctnode = MonteCarloTreeNode<UECdaState, Hand, 5>(state, my_playernum, random_seed);
   return mctnode.search();
 }
 
