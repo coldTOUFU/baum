@@ -211,6 +211,11 @@ class MonteCarloTreeNode {
     std::vector<GameAction> actions{first_state.legalActions()};
     if (actions.size() == 1) { return actions.at(0); } // 一手しかないなら、それを出す。
 
+    // デバッグ。7bdc5ad時点で稀にエラーが発生するのでここで出力させる。
+    if (actions.size() == 0) {
+      std::cout << first_state;
+    }
+
     std::uniform_int_distribution<int> dist(0, actions.size() - 1);
     return actions.at(dist(random_engine));
   }
